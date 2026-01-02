@@ -13,6 +13,39 @@ body {
   color: var(--bothub-ink);
 }
 
+.bothub-nav-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  padding: 0.6rem 0.8rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.bothub-nav-toggle:hover {
+  background: rgba(15, 118, 110, 0.08);
+}
+
+.bothub-nav-toggle__label {
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.bothub-nav-toggle__chevron {
+  font-size: 0.9rem;
+  transition: transform 0.2s ease;
+}
+
+.bothub-nav-toggle.is-collapsed .bothub-nav-toggle__chevron {
+  transform: rotate(-90deg);
+}
+
 .dashboard-module h1 {
   font-size: 1.6rem;
   margin-bottom: 1rem;
