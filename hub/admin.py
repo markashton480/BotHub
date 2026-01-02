@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import AuditEvent, Message, Project, Tag, Task, TaskAssignment, Thread, UserProfile
+from .models import AuditEvent, Message, Project, ProjectMembership, Tag, Task, TaskAssignment, Thread, UserProfile
 
 
 @admin.register(UserProfile)
@@ -15,6 +15,13 @@ class ProjectAdmin(admin.ModelAdmin):
     list_display = ("name", "is_archived", "created_by", "created_at")
     search_fields = ("name",)
     list_filter = ("is_archived",)
+
+
+@admin.register(ProjectMembership)
+class ProjectMembershipAdmin(admin.ModelAdmin):
+    list_display = ("project", "user", "role", "invited_by", "created_at")
+    list_filter = ("role",)
+    search_fields = ("project__name", "user__username")
 
 
 class TaskAssignmentInline(admin.TabularInline):

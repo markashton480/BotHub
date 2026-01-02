@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'django_htmx',
     'strawberry_django',
+    'guardian',
     'hub.apps.HubConfig',
 ]
 
@@ -148,3 +149,8 @@ REST_FRAMEWORK = {
         "rest_framework.permissions.IsAuthenticated",
     ],
 }
+
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "guardian.backends.ObjectPermissionBackend",
+]
