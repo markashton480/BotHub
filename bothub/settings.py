@@ -53,6 +53,7 @@ CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", ["https://bothub.
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -176,3 +177,46 @@ REST_FRAMEWORK = {
 }
 
 WEBHOOK_TIMEOUT_SECONDS = int(os.getenv("WEBHOOK_TIMEOUT_SECONDS", "5"))
+
+UNFOLD = {
+    "SITE_TITLE": "BotHub",
+    "SITE_HEADER": "BotHub Admin",
+    "SITE_URL": "/admin/",
+    "SIDEBAR": {
+        "show_search": True,
+        "navigation": [
+            {
+                "title": "Core",
+                "items": [
+                    {"title": "Projects", "icon": "folder", "link": "bothub_admin:hub_project_changelist"},
+                    {"title": "Tasks", "icon": "check-circle", "link": "bothub_admin:hub_task_changelist"},
+                    {"title": "Tags", "icon": "tag", "link": "bothub_admin:hub_tag_changelist"},
+                    {"title": "Assignments", "icon": "user-plus", "link": "bothub_admin:hub_taskassignment_changelist"},
+                ],
+            },
+            {
+                "title": "Collaboration",
+                "items": [
+                    {"title": "Threads", "icon": "chat-bubble-left-right", "link": "bothub_admin:hub_thread_changelist"},
+                    {"title": "Messages", "icon": "chat-bubble-left", "link": "bothub_admin:hub_message_changelist"},
+                ],
+            },
+            {
+                "title": "Ops",
+                "items": [
+                    {"title": "Webhooks", "icon": "bolt", "link": "bothub_admin:hub_webhook_changelist"},
+                    {"title": "Audit Events", "icon": "clock", "link": "bothub_admin:hub_auditevent_changelist"},
+                    {"title": "Tokens", "icon": "key", "link": "bothub_admin:authtoken_tokenproxy_changelist"},
+                ],
+            },
+            {
+                "title": "Accounts",
+                "items": [
+                    {"title": "Users", "icon": "user", "link": "bothub_admin:auth_user_changelist"},
+                    {"title": "Profiles", "icon": "identification", "link": "bothub_admin:hub_userprofile_changelist"},
+                    {"title": "Groups", "icon": "users", "link": "bothub_admin:auth_group_changelist"},
+                ],
+            },
+        ],
+    },
+}

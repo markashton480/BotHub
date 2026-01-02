@@ -1,0 +1,56 @@
+{% extends "admin/base_site.html" %}
+
+{% block content %}
+  <div class="dashboard-module">
+    <h1>Overview</h1>
+    <div class="module">
+      <table>
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>Projects</td><td>{{ stats.projects }}</td></tr>
+          <tr><td>Tasks</td><td>{{ stats.tasks }}</td></tr>
+          <tr><td>Threads</td><td>{{ stats.threads }}</td></tr>
+          <tr><td>Messages</td><td>{{ stats.messages }}</td></tr>
+          <tr><td>Tags</td><td>{{ stats.tags }}</td></tr>
+          <tr><td>Webhooks</td><td>{{ stats.webhooks }}</td></tr>
+          <tr><td>Audit Events</td><td>{{ stats.audit_events }}</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  {% if app_list %}
+    {% for app in app_list %}
+      <div class="module">
+        <h2>{{ app.name }}</h2>
+        <table>
+          <tbody>
+            {% for model in app.models %}
+              <tr>
+                <th scope="row">
+                  {% if model.admin_url %}
+                    <a href="{{ model.admin_url }}">{{ model.name }}</a>
+                  {% else %}
+                    {{ model.name }}
+                  {% endif %}
+                </th>
+                <td>
+                  {% if model.add_url %}
+                    <a href="{{ model.add_url }}">Add</a>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p>No apps available.</p>
+  {% endif %}
+{% endblock %}
