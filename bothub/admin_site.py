@@ -17,49 +17,45 @@ class BotHubAdminSite(UnfoldAdminSite):
 
     def get_urls(self):
         urls = super().get_urls()
-        custom_urls = [
+        custom = [
             path("", self.admin_view(self.dashboard_view), name="index"),
             path("dashboard/", self.admin_view(self.dashboard_view), name="dashboard"),
         ]
-        return custom_urls + urls
+        return custom + urls
 
     def dashboard_view(self, request):
-        # Optimize stats collection with a single database query using Django's table introspection
-        # Use quote_name to properly escape table names for security best practices
-        project_table = connection.ops.quote_name(Project._meta.db_table)
-        task_table = connection.ops.quote_name(Task._meta.db_table)
-        thread_table = connection.ops.quote_name(Thread._meta.db_table)
-        message_table = connection.ops.quote_name(Message._meta.db_table)
-        user_table = connection.ops.quote_name(User._meta.db_table)
-
+        # Single round-trip to collect counts
         with connection.cursor() as cursor:
+            project_table = connection.ops.quote_name(Project._meta.db_table)
+            task_table = connection.ops.quote_name(Task._meta.db_table)
+            thread_table = connection.ops.quote_name(Thread._meta.db_table)
+            message_table = connection.ops.quote_name(Message._meta.db_table)
+            user_table = connection.ops.quote_name(User._meta.db_table)
             cursor.execute(
                 f"""
                 SELECT
-                    (SELECT COUNT(*) FROM {project_table}) as projects,
-                    (SELECT COUNT(*) FROM {task_table}) as tasks,
-                    (SELECT COUNT(*) FROM {thread_table}) as threads,
-                    (SELECT COUNT(*) FROM {message_table}) as messages,
-                    (SELECT COUNT(*) FROM {user_table}) as users
+                    (SELECT COUNT(*) FROM {project_table}) AS projects,
+                    (SELECT COUNT(*) FROM {task_table}) AS tasks,
+                    (SELECT COUNT(*) FROM {thread_table}) AS threads,
+                    (SELECT COUNT(*) FROM {message_table}) AS messages,
+                    (SELECT COUNT(*) FROM {user_table}) AS users
                 """
             )
             row = cursor.fetchone()
-            stats = {
-                "projects": row[0],
-                "tasks": row[1],
-                "threads": row[2],
-                "messages": row[3],
-                "users": row[4],
-            }
-
+        stats = {
+            "projects": row[0],
+            "tasks": row[1],
+            "threads": row[2],
+            "messages": row[3],
+            "users": row[4],
+        }
         recent_audit_events = (
-            AuditEvent.objects.select_related("actor").order_by("-created_at")[:10]
+            AuditEvent.objects.select_related("actor").order_by("-created_at")[:8]
         )
         recent_log_entries = (
             LogEntry.objects.select_related("user", "content_type")
-            .order_by("-action_time")[:10]
+            .order_by("-action_time")[:8]
         )
-
         context = {
             **self.each_context(request),
             "title": "Dashboard",
