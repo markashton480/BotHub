@@ -2,6 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
+from django_ratelimit.decorators import ratelimit
 
 from .audit import log_event
 from .forms import MessageForm, ProjectForm, TaskForm, ThreadForm
@@ -42,6 +43,7 @@ def htmx_form_error(request, template_name, context, target_id):
 
 
 @login_required
+@ratelimit(key='user', rate='1000/h', method='GET')
 def home(request):
     projects = Project.objects.all().order_by("name")
     # Filter projects by membership
@@ -57,6 +59,7 @@ def home(request):
 
 
 @login_required
+@ratelimit(key='user', rate='1000/h', method='POST')
 def project_create(request):
     if request.method != "POST":
         return redirect("hub:home")
@@ -85,6 +88,7 @@ def project_create(request):
 
 
 @login_required
+@ratelimit(key='user', rate='1000/h', method='GET')
 def project_detail(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
     # Check if user has access to this project
@@ -111,6 +115,7 @@ def project_detail(request, project_id):
 
 
 @login_required
+@ratelimit(key='user', rate='1000/h', method='POST')
 def task_create(request, project_id):
     if request.method != "POST":
         return redirect("hub:project-detail", project_id=project_id)
@@ -143,6 +148,7 @@ def task_create(request, project_id):
 
 
 @login_required
+@ratelimit(key='user', rate='1000/h', method='POST')
 def thread_create(request, project_id):
     if request.method != "POST":
         return redirect("hub:project-detail", project_id=project_id)
@@ -170,6 +176,7 @@ def thread_create(request, project_id):
 
 
 @login_required
+@ratelimit(key='user', rate='1000/h', method='GET')
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, pk=thread_id)
     # Check if user has access to this thread's project
@@ -196,6 +203,7 @@ def thread_detail(request, thread_id):
 
 
 @login_required
+@ratelimit(key='user', rate='1000/h', method='POST')
 def message_create(request, thread_id):
     if request.method != "POST":
         return redirect("hub:thread-detail", thread_id=thread_id)

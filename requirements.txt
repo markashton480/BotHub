@@ -5,6 +5,7 @@ strawberry-graphql-django>=0.72
 django-htmx>=1.27
 django-guardian>=2.4
 django-unfold>=0.35
+django-ratelimit>=4.1
 django-json-widget>=1.2
 gunicorn>=21.2
 psycopg[binary]>=3.1
