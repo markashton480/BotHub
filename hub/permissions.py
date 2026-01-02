@@ -1,8 +1,8 @@
 """
-Permission classes for row-level access control using django-guardian.
+Permission classes for row-level access control based on ProjectMembership.
 
-All resources (Projects, Tasks, Threads, Messages) are scoped by Project membership.
-Users must have appropriate project membership to access related resources.
+All resources (Projects, Tasks, Threads, Messages) are scoped by project membership,
+and users must have appropriate membership to access related resources.
 """
 from rest_framework import permissions
 from .models import ProjectMembership, Project, Task, Thread
@@ -72,13 +72,8 @@ class CanViewProject(HasProjectPermission):
             return False
 
         role = self.get_user_role_in_project(request.user, project)
-        # All roles can view (VIEWER+)
-        return role in [
-            ProjectMembership.Role.VIEWER,
-            ProjectMembership.Role.MEMBER,
-            ProjectMembership.Role.ADMIN,
-            ProjectMembership.Role.OWNER,
-        ]
+        # All roles can view - any membership grants view access
+        return role is not None
 
 
 class CanEditProject(HasProjectPermission):

@@ -62,6 +62,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         actor = get_actor(self.request)
+        assert actor is not None, "Actor must be authenticated"
         instance = serializer.save(created_by=actor)
         # Auto-create OWNER membership for project creator
         ProjectMembership.objects.create(
@@ -92,8 +93,15 @@ class ProjectMembershipViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         actor = get_actor(self.request)
+        assert actor is not None, "Actor must be authenticated"
         instance = serializer.save(invited_by=actor)
         log_event(actor, "project.membership.created", instance)
+
+    def get_permissions(self):
+        """Use CanEditProject for write operations on project memberships."""
+        if self.action in ["create", "update", "partial_update", "destroy"]:
+            return [permissions.IsAuthenticated(), CanEditProject()]
+        return [permissions.IsAuthenticated()]
 
 
 class TagViewSet(viewsets.ModelViewSet):
@@ -121,6 +129,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         actor = get_actor(self.request)
+        assert actor is not None, "Actor must be authenticated"
         instance = serializer.save(created_by=actor)
         log_event(actor, "task.created", instance)
 
@@ -142,6 +151,7 @@ class TaskAssignmentViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         actor = get_actor(self.request)
+        assert actor is not None, "Actor must be authenticated"
         instance = serializer.save(added_by=actor)
         log_event(actor, "task.assignment.created", instance)
 
@@ -171,6 +181,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         actor = get_actor(self.request)
+        assert actor is not None, "Actor must be authenticated"
         instance = serializer.save(created_by=actor)
         log_event(actor, "thread.created", instance)
 
@@ -214,6 +225,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = get_actor(self.request)
+        assert user is not None, "Actor must be authenticated"
         author_role, author_label = self._get_author_metadata(user, serializer.validated_data)
         instance = serializer.save(created_by=user, author_role=author_role, author_label=author_label)
         log_event(user, "message.created", instance)
@@ -226,9 +238,39 @@ class MessageViewSet(viewsets.ModelViewSet):
 
 
 class AuditEventViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = AuditEvent.objects.all().select_related("actor", "target_content_type")
     serializer_class = AuditEventSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        """Filter audit events to only show those related to projects the user has access to."""
+        from django.contrib.contenttypes.models import ContentType
+        from django.db.models import Q
+
+        queryset = AuditEvent.objects.all().select_related("actor", "target_content_type")
+        user = self.request.user
+
+        if user.is_superuser:
+            return queryset
+
+        # Get content types for models that are project-scoped
+        project_ct = ContentType.objects.get_for_model(Project)
+        task_ct = ContentType.objects.get_for_model(Task)
+        thread_ct = ContentType.objects.get_for_model(Thread)
+        message_ct = ContentType.objects.get_for_model(Message)
+        membership_ct = ContentType.objects.get_for_model(ProjectMembership)
+
+        # Build a filter for events related to projects the user has access to
+        return queryset.filter(
+            Q(target_content_type=project_ct, target_object_id__in=Project.objects.filter(memberships__user=user).values_list('id', flat=True)) |
+            Q(target_content_type=task_ct, target_object_id__in=Task.objects.filter(project__memberships__user=user).values_list('id', flat=True)) |
+            Q(target_content_type=thread_ct, target_object_id__in=Thread.objects.filter(
+                Q(project__memberships__user=user) | Q(task__project__memberships__user=user)
+            ).values_list('id', flat=True)) |
+            Q(target_content_type=message_ct, target_object_id__in=Message.objects.filter(
+                Q(thread__project__memberships__user=user) | Q(thread__task__project__memberships__user=user)
+            ).values_list('id', flat=True)) |
+            Q(target_content_type=membership_ct, target_object_id__in=ProjectMembership.objects.filter(project__memberships__user=user).values_list('id', flat=True))
+        ).distinct()
 
 
 class WebhookViewSet(viewsets.ModelViewSet):

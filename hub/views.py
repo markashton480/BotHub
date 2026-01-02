@@ -173,9 +173,16 @@ def thread_create(request, project_id):
 def thread_detail(request, thread_id):
     thread = get_object_or_404(Thread, pk=thread_id)
     # Check if user has access to this thread's project
-    target_project = thread.project if thread.project else (thread.task.project if thread.task else None)
-    if target_project and not user_can_access_project(request.user, target_project):
-        raise PermissionDenied("You don't have access to this thread.")
+    if thread.project is not None:
+        target_project = thread.project
+    elif thread.task is not None and thread.task.project is not None:
+        target_project = thread.task.project
+    else:
+        raise PermissionDenied("This thread is not associated with a project.")
+
+    if not user_can_access_project(request.user, target_project):
+        raise PermissionDenied("You don't have access to this project.")
+
     messages = Message.objects.filter(thread=thread).select_related("created_by")
     return render(
         request,
@@ -194,9 +201,16 @@ def message_create(request, thread_id):
         return redirect("hub:thread-detail", thread_id=thread_id)
     thread = get_object_or_404(Thread, pk=thread_id)
     # Check if user has permission to edit this thread's project
-    target_project = thread.project if thread.project else (thread.task.project if thread.task else None)
-    if target_project and not user_can_edit_project(request.user, target_project):
+    if thread.project is not None:
+        target_project = thread.project
+    elif thread.task is not None and thread.task.project is not None:
+        target_project = thread.task.project
+    else:
+        raise PermissionDenied("This thread is not associated with a project.")
+
+    if not user_can_edit_project(request.user, target_project):
         raise PermissionDenied("You don't have permission to create messages in this thread.")
+
     form = MessageForm(request.POST)
     if not form.is_valid():
         return htmx_form_error(
