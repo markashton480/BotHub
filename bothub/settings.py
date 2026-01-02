@@ -55,6 +55,7 @@ CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", ["https://bothub.
 
 INSTALLED_APPS = [
     "unfold",
+    "django_json_widget",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -200,9 +201,10 @@ UNFOLD = {
         }
     },
     "STYLES": ["/static/admin/bothub.css"],
+    "SCRIPTS": ["/static/admin/bothub.js"],
     "COMMAND": {
         "search_models": True,
-        "show_history": False,
+        "show_history": True,
         "search_callback": None,
     },
     "SIDEBAR": {

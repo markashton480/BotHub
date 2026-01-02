@@ -1,10 +1,12 @@
 from django import forms
 from django.contrib import admin
+from django.contrib.admin import DateFieldListFilter
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.models import Group
 from django.db import models
+from django_json_widget.widgets import JSONEditorWidget
 from rest_framework.authtoken.admin import TokenAdmin
 from rest_framework.authtoken.models import TokenProxy
 
@@ -75,8 +77,9 @@ class TaskInlineForProject(admin.TabularInline):
 @admin.register(Project, site=bot_admin_site)
 class ProjectAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     list_display = ("name", "is_archived", "created_by", "created_at")
+    list_editable = ("is_archived",)
     search_fields = ("name",)
-    list_filter = ("is_archived",)
+    list_filter = ("is_archived", ("created_at", DateFieldListFilter))
     ordering = ("name",)
     date_hierarchy = "created_at"
     inlines = [TaskInlineForProject, ThreadInlineForProject]
@@ -94,8 +97,10 @@ class TaskAssignmentInline(admin.TabularInline):
 @admin.register(Task, site=bot_admin_site)
 class TaskAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     list_display = ("title", "project", "parent", "status", "priority", "due_at", "position")
-    list_filter = ("status", "priority", "project")
+    list_editable = ("status", "priority", "due_at", "position")
+    list_filter = ("status", "priority", "project", ("created_at", DateFieldListFilter))
     search_fields = ("title", "description")
+    list_select_related = ("project", "parent", "created_by")
     inlines = [TaskAssignmentInline]
     autocomplete_fields = ("project", "parent", "created_by", "tags")
     date_hierarchy = "created_at"
@@ -133,6 +138,7 @@ class ThreadAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     list_display = ("title", "kind", "project", "task", "created_by", "created_at")
     list_filter = ("kind",)
     search_fields = ("title", "project__name", "task__title")
+    list_select_related = ("project", "task", "created_by")
     autocomplete_fields = ("project", "task", "created_by")
     date_hierarchy = "created_at"
     inlines = [MessageInline]
@@ -148,6 +154,7 @@ class MessageAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     list_display = ("thread", "author_role", "author_label", "created_by", "created_at")
     list_filter = ("author_role",)
     search_fields = ("body", "author_label", "thread__title")
+    list_select_related = ("thread", "created_by")
     autocomplete_fields = ("thread", "created_by")
     date_hierarchy = "created_at"
     fieldsets = (
@@ -157,7 +164,7 @@ class MessageAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     )
     formfield_overrides = {
         models.TextField: {"widget": forms.Textarea(attrs={"rows": 6})},
-        models.JSONField: {"widget": forms.Textarea(attrs={"rows": 6, "class": "monospace"})},
+        models.JSONField: {"widget": JSONEditorWidget(height="320px")},
     }
 
 
@@ -166,6 +173,7 @@ class TaskAssignmentAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     list_display = ("task", "assignee", "role", "added_by", "created_at")
     list_filter = ("role",)
     search_fields = ("task__title", "assignee__username")
+    list_select_related = ("task", "assignee", "added_by")
     autocomplete_fields = ("task", "assignee", "added_by")
     date_hierarchy = "created_at"
 
@@ -177,7 +185,7 @@ class AuditEventAdmin(admin.ModelAdmin):
     search_fields = ("verb", "metadata", "actor__username")
     date_hierarchy = "created_at"
     formfield_overrides = {
-        models.JSONField: {"widget": forms.Textarea(attrs={"rows": 6, "class": "monospace"})},
+        models.JSONField: {"widget": JSONEditorWidget(height="320px")},
     }
 
 
@@ -188,7 +196,7 @@ class WebhookAdmin(admin.ModelAdmin):
     search_fields = ("name", "url", "events")
     date_hierarchy = "created_at"
     formfield_overrides = {
-        models.JSONField: {"widget": forms.Textarea(attrs={"rows": 4, "class": "monospace"})},
+        models.JSONField: {"widget": JSONEditorWidget(height="280px")},
     }
 
 
