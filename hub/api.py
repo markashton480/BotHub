@@ -107,6 +107,18 @@ class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def _get_author_metadata(self, user, validated_data):
+        author_role = validated_data.get("author_role")
+        author_label = validated_data.get("author_label")
+        if user:
+            if not author_label:
+                author_label = user.get_username()
+            if not author_role:
+                profile = getattr(user, "profile", None)
+                if profile and profile.kind == "agent":
+                    author_role = "agent"
+        return author_role or "human", author_label or ""
+
     def get_queryset(self):
         queryset = Message.objects.all().select_related("thread", "created_by")
         thread_id = parse_int(self.request.query_params.get("thread"))
@@ -116,17 +128,8 @@ class MessageViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = get_actor(self.request)
-        author_role = serializer.validated_data.get("author_role")
-        author_label = serializer.validated_data.get("author_label")
-        if user and not author_label:
-            author_label = user.get_username()
-        if user and not author_role:
-            profile = getattr(user, "profile", None)
-            if profile and profile.kind == "agent":
-                author_role = "agent"
-        instance = serializer.save(
-            created_by=user, author_role=author_role or "human", author_label=author_label or ""
-        )
+        author_role, author_label = self._get_author_metadata(user, serializer.validated_data)
+        instance = serializer.save(created_by=user, author_role=author_role, author_label=author_label)
         log_event(user, "message.created", instance)
 
 

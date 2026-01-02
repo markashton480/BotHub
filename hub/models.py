@@ -160,6 +160,7 @@ class Thread(models.Model):
         ]
 
     def clean(self) -> None:
+        # Keep checks here for friendly validation messages alongside DB constraints.
         if not self.project_id and not self.task_id:
             raise ValidationError("Thread must be attached to a project or a task.")
         if self.project_id and self.task_id:

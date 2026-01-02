@@ -22,6 +22,13 @@ def get_actor(info):
     return None
 
 
+def require_actor(info):
+    actor = get_actor(info)
+    if not actor:
+        raise GraphQLError("Authentication required.")
+    return actor
+
+
 @strawberry_django.type(User, fields=["id", "username", "email"])
 class UserType:
     pass
@@ -156,7 +163,7 @@ class Query:
 class Mutation:
     @strawberry.mutation
     def create_project(self, info, input: ProjectInput) -> ProjectType:
-        actor = get_actor(info)
+        actor = require_actor(info)
         project = Project.objects.create(
             name=input.name,
             description=input.description or "",
@@ -167,7 +174,7 @@ class Mutation:
 
     @strawberry.mutation
     def create_task(self, info, input: TaskInput) -> TaskType:
-        actor = get_actor(info)
+        actor = require_actor(info)
         project = Project.objects.filter(pk=input.project_id).first()
         if not project:
             raise GraphQLError("Project not found.")
@@ -188,9 +195,13 @@ class Mutation:
 
     @strawberry.mutation
     def create_thread(self, info, input: ThreadInput) -> ThreadType:
-        actor = get_actor(info)
+        actor = require_actor(info)
         project = Project.objects.filter(pk=input.project_id).first() if input.project_id else None
         task = Task.objects.filter(pk=input.task_id).first() if input.task_id else None
+        if input.project_id and not project:
+            raise GraphQLError("Project not found.")
+        if input.task_id and not task:
+            raise GraphQLError("Task not found.")
         if not project and not task:
             raise GraphQLError("Thread must attach to a project or task.")
         if project and task:
@@ -207,7 +218,7 @@ class Mutation:
 
     @strawberry.mutation
     def create_message(self, info, input: MessageInput) -> MessageType:
-        actor = get_actor(info)
+        actor = require_actor(info)
         thread = Thread.objects.filter(pk=input.thread_id).first()
         if not thread:
             raise GraphQLError("Thread not found.")

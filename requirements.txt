@@ -3,4 +3,3 @@ djangorestframework>=3.16
 strawberry-graphql>=0.288
 strawberry-graphql-django>=0.72
 django-htmx>=1.27
-django-tailwind>=4.4

@@ -1,3 +1,4 @@
+from django.db.models import Count
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .audit import log_event
@@ -15,6 +16,14 @@ def build_task_tree(tasks):
         else:
             roots.append(node)
     return roots
+
+
+def get_project_tasks(project):
+    return (
+        Task.objects.filter(project=project)
+        .select_related("parent")
+        .order_by("parent_id", "position", "id")
+    )
 
 
 def htmx_form_error(request, template_name, context, target_id):
@@ -59,13 +68,13 @@ def project_create(request):
 
 def project_detail(request, project_id):
     project = get_object_or_404(Project, pk=project_id)
-    tasks = (
-        Task.objects.filter(project=project)
-        .select_related("parent")
-        .order_by("parent_id", "position", "id")
-    )
+    tasks = get_project_tasks(project)
     task_tree = build_task_tree(tasks)
-    threads = Thread.objects.filter(project=project).order_by("-updated_at")
+    threads = (
+        Thread.objects.filter(project=project)
+        .annotate(message_count=Count("messages"))
+        .order_by("-updated_at")
+    )
     return render(
         request,
         "hub/project_detail.html",
@@ -98,11 +107,7 @@ def task_create(request, project_id):
     form.save_m2m()
     log_event(task.created_by, "task.created", task)
     if request.htmx:
-        tasks = (
-            Task.objects.filter(project=project)
-            .select_related("parent")
-            .order_by("parent_id", "position", "id")
-        )
+        tasks = get_project_tasks(project)
         return render(
             request,
             "hub/partials/task_tree.html",
@@ -129,6 +134,7 @@ def thread_create(request, project_id):
     thread.save()
     log_event(thread.created_by, "thread.created", thread)
     if request.htmx:
+        thread.message_count = 0
         return render(request, "hub/partials/thread_row.html", {"thread": thread})
     return redirect("hub:project-detail", project_id=project_id)
 

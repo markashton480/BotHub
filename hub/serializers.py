@@ -110,9 +110,19 @@ class ThreadSerializer(serializers.ModelSerializer):
         project = attrs.get("project") or (self.instance.project if self.instance else None)
         task = attrs.get("task") or (self.instance.task if self.instance else None)
         if not project and not task:
-            raise serializers.ValidationError("Thread must be attached to a project or a task.")
+            raise serializers.ValidationError(
+                {
+                    "project": "Thread must be attached to a project or a task.",
+                    "task": "Thread must be attached to a project or a task.",
+                }
+            )
         if project and task:
-            raise serializers.ValidationError("Thread can only attach to one scope.")
+            raise serializers.ValidationError(
+                {
+                    "project": "Thread can only attach to one scope.",
+                    "task": "Thread can only attach to one scope.",
+                }
+            )
         return attrs
 
 
