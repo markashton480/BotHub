@@ -27,12 +27,12 @@ class GraphQLTestClient(BaseGraphQLTestClient):
         super().__init__(schema)
         self.request_user = request_user
 
-    def request(self, body, **kwargs):
+    def request(self, body, headers=None, files=None):
         # Create a mock request object with authenticated user
         from unittest.mock import Mock
         request = Mock()
         request.user = self.request_user
-        return super().request(body, context=request, **kwargs)
+        return super().request(body)
 
 
 class GraphQLProjectQueryTests(TestCase):
