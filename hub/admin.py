@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib import admin
+from django.contrib import admin as django_admin
 from django.contrib.admin import DateFieldListFilter
 from django.contrib.auth import get_user_model
 from django.contrib.auth.admin import GroupAdmin as BaseGroupAdmin
@@ -9,6 +9,8 @@ from django.db import models
 from django_json_widget.widgets import JSONEditorWidget
 from rest_framework.authtoken.admin import TokenAdmin
 from rest_framework.authtoken.models import TokenProxy
+from unfold.admin import ModelAdmin, StackedInline, TabularInline
+from unfold.mixins import BaseModelAdminMixin
 
 from bothub.admin_site import bot_admin_site
 from .models import AuditEvent, Message, Project, ProjectMembership, Tag, Task, TaskAssignment, Thread, UserProfile, Webhook
@@ -27,28 +29,28 @@ class CreatedByAdminMixin:
         super().save_model(request, obj, form, change)
 
 
-class UserProfileInline(admin.StackedInline):
+class UserProfileInline(StackedInline):
     model = UserProfile
     extra = 0
     can_delete = False
     fields = ("kind", "display_name", "notes")
 
 
-@admin.register(User, site=bot_admin_site)
-class UserAdmin(BaseUserAdmin):
+@django_admin.register(User, site=bot_admin_site)
+class UserAdmin(BaseModelAdminMixin, BaseUserAdmin):
     inlines = [UserProfileInline]
     list_display = ("username", "email", "is_staff", "is_active", "last_login")
     search_fields = ("username", "email")
     ordering = ("username",)
 
 
-@admin.register(Group, site=bot_admin_site)
-class GroupAdmin(BaseGroupAdmin):
+@django_admin.register(Group, site=bot_admin_site)
+class GroupAdmin(BaseModelAdminMixin, BaseGroupAdmin):
     pass
 
 
-@admin.register(UserProfile, site=bot_admin_site)
-class UserProfileAdmin(admin.ModelAdmin):
+@django_admin.register(UserProfile, site=bot_admin_site)
+class UserProfileAdmin(ModelAdmin):
     list_display = ("user", "kind", "display_name", "created_at")
     list_filter = ("kind",)
     search_fields = ("user__username", "display_name")
@@ -57,7 +59,7 @@ class UserProfileAdmin(admin.ModelAdmin):
     }
 
 
-class ThreadInlineForProject(admin.TabularInline):
+class ThreadInlineForProject(TabularInline):
     model = Thread
     fk_name = "project"
     extra = 0
@@ -66,7 +68,7 @@ class ThreadInlineForProject(admin.TabularInline):
     show_change_link = True
 
 
-class TaskInlineForProject(admin.TabularInline):
+class TaskInlineForProject(TabularInline):
     model = Task
     fk_name = "project"
     extra = 0
@@ -74,8 +76,8 @@ class TaskInlineForProject(admin.TabularInline):
     show_change_link = True
 
 
-@admin.register(Project, site=bot_admin_site)
-class ProjectAdmin(CreatedByAdminMixin, admin.ModelAdmin):
+@django_admin.register(Project, site=bot_admin_site)
+class ProjectAdmin(CreatedByAdminMixin, ModelAdmin):
     list_display = ("name", "is_archived", "created_by", "created_at")
     list_editable = ("is_archived",)
     search_fields = ("name",)
@@ -88,21 +90,21 @@ class ProjectAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     }
 
 
-@admin.register(ProjectMembership, site=bot_admin_site)
-class ProjectMembershipAdmin(admin.ModelAdmin):
+@django_admin.register(ProjectMembership, site=bot_admin_site)
+class ProjectMembershipAdmin(ModelAdmin):
     list_display = ("project", "user", "role", "invited_by", "created_at")
     list_filter = ("role",)
     search_fields = ("project__name", "user__username")
 
 
-class TaskAssignmentInline(admin.TabularInline):
+class TaskAssignmentInline(TabularInline):
     model = TaskAssignment
     extra = 0
     autocomplete_fields = ("assignee", "added_by")
 
 
-@admin.register(Task, site=bot_admin_site)
-class TaskAdmin(CreatedByAdminMixin, admin.ModelAdmin):
+@django_admin.register(Task, site=bot_admin_site)
+class TaskAdmin(CreatedByAdminMixin, ModelAdmin):
     list_display = ("title", "project", "parent", "status", "priority", "due_at", "position")
     list_editable = ("status", "priority", "due_at", "position")
     list_filter = ("status", "priority", "project", ("created_at", DateFieldListFilter))
@@ -121,8 +123,8 @@ class TaskAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     }
 
 
-@admin.register(Tag, site=bot_admin_site)
-class TagAdmin(admin.ModelAdmin):
+@django_admin.register(Tag, site=bot_admin_site)
+class TagAdmin(ModelAdmin):
     list_display = ("name", "slug", "color", "created_at")
     search_fields = ("name", "slug")
     ordering = ("name",)
@@ -132,7 +134,7 @@ class TagAdmin(admin.ModelAdmin):
     }
 
 
-class MessageInline(admin.StackedInline):
+class MessageInline(StackedInline):
     model = Message
     extra = 0
     autocomplete_fields = ("created_by",)
@@ -140,8 +142,8 @@ class MessageInline(admin.StackedInline):
     readonly_fields = ("created_at",)
 
 
-@admin.register(Thread, site=bot_admin_site)
-class ThreadAdmin(CreatedByAdminMixin, admin.ModelAdmin):
+@django_admin.register(Thread, site=bot_admin_site)
+class ThreadAdmin(CreatedByAdminMixin, ModelAdmin):
     list_display = ("title", "kind", "project", "task", "created_by", "created_at")
     list_filter = ("kind",)
     search_fields = ("title", "project__name", "task__title")
@@ -156,8 +158,8 @@ class ThreadAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     )
 
 
-@admin.register(Message, site=bot_admin_site)
-class MessageAdmin(CreatedByAdminMixin, admin.ModelAdmin):
+@django_admin.register(Message, site=bot_admin_site)
+class MessageAdmin(CreatedByAdminMixin, ModelAdmin):
     list_display = ("thread", "author_role", "author_label", "created_by", "created_at")
     list_filter = ("author_role",)
     search_fields = ("body", "author_label", "thread__title")
@@ -175,8 +177,8 @@ class MessageAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     }
 
 
-@admin.register(TaskAssignment, site=bot_admin_site)
-class TaskAssignmentAdmin(CreatedByAdminMixin, admin.ModelAdmin):
+@django_admin.register(TaskAssignment, site=bot_admin_site)
+class TaskAssignmentAdmin(CreatedByAdminMixin, ModelAdmin):
     list_display = ("task", "assignee", "role", "added_by", "created_at")
     list_filter = ("role",)
     search_fields = ("task__title", "assignee__username")
@@ -185,8 +187,8 @@ class TaskAssignmentAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     date_hierarchy = "created_at"
 
 
-@admin.register(AuditEvent, site=bot_admin_site)
-class AuditEventAdmin(admin.ModelAdmin):
+@django_admin.register(AuditEvent, site=bot_admin_site)
+class AuditEventAdmin(ModelAdmin):
     list_display = ("verb", "actor", "created_at")
     list_filter = ("verb",)
     search_fields = ("verb", "metadata", "actor__username")
@@ -196,8 +198,8 @@ class AuditEventAdmin(admin.ModelAdmin):
     }
 
 
-@admin.register(Webhook, site=bot_admin_site)
-class WebhookAdmin(admin.ModelAdmin):
+@django_admin.register(Webhook, site=bot_admin_site)
+class WebhookAdmin(ModelAdmin):
     list_display = ("name", "url", "is_active", "created_at")
     list_filter = ("is_active",)
     search_fields = ("name", "url", "events")
@@ -207,4 +209,8 @@ class WebhookAdmin(admin.ModelAdmin):
     }
 
 
-bot_admin_site.register(TokenProxy, TokenAdmin)
+class TokenProxyAdmin(BaseModelAdminMixin, TokenAdmin):
+    pass
+
+
+bot_admin_site.register(TokenProxy, TokenProxyAdmin)
