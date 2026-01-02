@@ -32,11 +32,13 @@ class AgentRateThrottle(UserRateThrottle):
 
     def get_rate(self):
         """Return appropriate rate based on user type."""
+        from django.conf import settings
+
         if self.request and self.request.user and self.request.user.is_authenticated:
             profile = getattr(self.request.user, 'profile', None)
             if profile and profile.kind == 'agent':
-                return self.THROTTLE_RATES.get('agent', '5000/hour')
-        return self.THROTTLE_RATES.get('user', '1000/hour')
+                return settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'].get('agent', '5000/hour')
+        return settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'].get('user', '1000/hour')
 
 
 def get_actor(request):

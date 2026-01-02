@@ -6,6 +6,7 @@ import strawberry
 import strawberry_django
 
 from django.contrib.auth import get_user_model
+from django.db import IntegrityError
 from strawberry.exceptions import GraphQLError
 
 from hub.audit import log_event
@@ -251,6 +252,7 @@ class Query:
             limit = 100
         queryset = Project.objects.all()
         queryset = filter_projects_by_membership(queryset, actor)
+        queryset = queryset.prefetch_related('tasks', 'threads', 'memberships')
         total_count = queryset.count()
         items = list(queryset[offset:offset + limit])
         return ProjectsResult(items=items, total_count=total_count)
@@ -278,6 +280,8 @@ class Query:
         queryset = filter_by_project_membership(queryset, actor, project_field='project')
         if project_id:
             queryset = queryset.filter(project_id=project_id)
+        # Note: count() is called before slicing to provide accurate pagination metadata.
+        # For large datasets, consider making total_count optional to reduce query overhead.
         total_count = queryset.count()
         items = list(queryset[offset:offset + limit])
         return TasksResult(items=items, total_count=total_count)
@@ -297,6 +301,8 @@ class Query:
             ).distinct()
         if project_id:
             queryset = queryset.filter(project_id=project_id)
+        # Note: count() is called before slicing to provide accurate pagination metadata.
+        # For large datasets, consider making total_count optional to reduce query overhead.
         total_count = queryset.count()
         items = list(queryset[offset:offset + limit])
         return ThreadsResult(items=items, total_count=total_count)
@@ -316,6 +322,8 @@ class Query:
             ).distinct()
         if thread_id:
             queryset = queryset.filter(thread_id=thread_id)
+        # Note: count() is called before slicing to provide accurate pagination metadata.
+        # For large datasets, consider making total_count optional to reduce query overhead.
         total_count = queryset.count()
         items = list(queryset[offset:offset + limit])
         return MessagesResult(items=items, total_count=total_count)
@@ -327,6 +335,8 @@ class Query:
         if limit > 100:
             limit = 100
         queryset = Tag.objects.all()
+        # Note: count() is called before slicing to provide accurate pagination metadata.
+        # For large datasets, consider making total_count optional to reduce query overhead.
         total_count = queryset.count()
         items = list(queryset[offset:offset + limit])
         return TagsResult(items=items, total_count=total_count)
@@ -343,6 +353,8 @@ class Query:
         queryset = filter_by_project_membership(queryset, actor, project_field='project')
         if project_id:
             queryset = queryset.filter(project_id=project_id)
+        # Note: count() is called before slicing to provide accurate pagination metadata.
+        # For large datasets, consider making total_count optional to reduce query overhead.
         total_count = queryset.count()
         items = list(queryset[offset:offset + limit])
         return MembershipsResult(items=items, total_count=total_count)
@@ -466,12 +478,18 @@ class Mutation:
         assignee = User.objects.filter(pk=input.assignee_id).first()
         if not assignee:
             raise GraphQLError("Assignee not found.")
-        assignment = TaskAssignment.objects.create(
-            task=task,
-            assignee=assignee,
-            role=input.role,
-            added_by=actor,
-        )
+        # Check for existing assignment to avoid IntegrityError
+        if TaskAssignment.objects.filter(task=task, assignee=assignee, role=input.role).exists():
+            raise GraphQLError("This assignment already exists.")
+        try:
+            assignment = TaskAssignment.objects.create(
+                task=task,
+                assignee=assignee,
+                role=input.role,
+                added_by=actor,
+            )
+        except IntegrityError:
+            raise GraphQLError("This assignment already exists.")
         log_event(actor, "task.assignment.created", assignment)
         return assignment
 

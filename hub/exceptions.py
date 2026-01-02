@@ -65,3 +65,21 @@ class InvalidTaskAssignment(APIException):
     status_code = status.HTTP_400_BAD_REQUEST
     default_detail = "Invalid task assignment configuration."
     default_code = "invalid_assignment"
+
+
+# Exception registry for programmatic access
+EXCEPTION_REGISTRY: dict[str, type[APIException]] = {
+    ProjectNotFound.default_code: ProjectNotFound,
+    TaskNotFound.default_code: TaskNotFound,
+    ThreadNotFound.default_code: ThreadNotFound,
+    MessageNotFound.default_code: MessageNotFound,
+    TagNotFound.default_code: TagNotFound,
+    InsufficientPermissions.default_code: InsufficientPermissions,
+    InvalidProjectMembership.default_code: InvalidProjectMembership,
+    InvalidTaskAssignment.default_code: InvalidTaskAssignment,
+}
+
+
+def get_exception_class(code: str) -> type[APIException] | None:
+    """Return the APIException subclass registered for the given error code."""
+    return EXCEPTION_REGISTRY.get(code)
