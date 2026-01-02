@@ -14,13 +14,14 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
 from django.urls import include, path
+from django.views.generic import RedirectView
 from rest_framework.authtoken.views import obtain_auth_token
 from rest_framework.routers import DefaultRouter
 from strawberry.django.views import GraphQLView
 
 from hub import api as hub_api
+from .admin_site import bot_admin_site
 from .schema import schema
 
 router = DefaultRouter()
@@ -34,10 +35,11 @@ router.register("assignments", hub_api.TaskAssignmentViewSet, basename="assignme
 router.register("threads", hub_api.ThreadViewSet, basename="thread")
 router.register("messages", hub_api.MessageViewSet, basename="message")
 router.register("audit-events", hub_api.AuditEventViewSet, basename="audit-event")
+router.register("webhooks", hub_api.WebhookViewSet, basename="webhook")
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path("", include("hub.urls")),
+    path("admin/", bot_admin_site.urls),
+    path("", RedirectView.as_view(url="/admin/", permanent=False)),
     path("api/", include(router.urls)),
     path("api/auth/token/", obtain_auth_token, name="api-token"),
     path("graphql/", GraphQLView.as_view(schema=schema, graphiql=True)),

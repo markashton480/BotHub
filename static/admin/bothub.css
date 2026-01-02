@@ -1,0 +1,102 @@
+:root {
+  --bothub-accent: #0f766e;
+  --bothub-accent-strong: #0b5e57;
+  --bothub-ink: #0f172a;
+  --bothub-mist: #f4f6f9;
+  --bothub-card: #ffffff;
+  --bothub-border: rgba(15, 23, 42, 0.08);
+}
+
+body {
+  background: radial-gradient(circle at top right, rgba(15, 118, 110, 0.08), transparent 40%),
+    linear-gradient(180deg, #f8fafc, #eef2f6);
+  color: var(--bothub-ink);
+}
+
+.dashboard-module h1 {
+  font-size: 1.6rem;
+  margin-bottom: 1rem;
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.dashboard-card {
+  background: var(--bothub-card);
+  border: 1px solid var(--bothub-border);
+  border-radius: 16px;
+  padding: 1rem 1.2rem;
+  box-shadow: 0 12px 24px rgba(15, 23, 42, 0.08);
+}
+
+.dashboard-label {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(15, 23, 42, 0.5);
+}
+
+.dashboard-value {
+  font-size: 1.6rem;
+  font-weight: 600;
+  margin-top: 0.4rem;
+}
+
+a {
+  color: var(--bothub-accent);
+}
+
+a:hover {
+  color: var(--bothub-accent-strong);
+}
+
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: 400;
+  font-style: normal;
+  font-size: 18px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  font-feature-settings: "liga";
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 20;
+}
+
+#content-main form {
+  max-width: 1100px;
+}
+
+#content-main .module.aligned {
+  border-color: var(--bothub-border);
+}
+
+#content-main .form-row textarea,
+#content-main .form-row .vLargeTextField {
+  min-height: 120px;
+  max-height: 360px;
+  resize: vertical;
+}
+
+#content-main .form-row textarea.monospace {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 0.85rem;
+  background: #f8fafc;
+}
+
+#content-main .form-row input[type="text"],
+#content-main .form-row input[type="email"],
+#content-main .form-row input[type="url"],
+#content-main .form-row select,
+#content-main .form-row textarea {
+  max-width: 100%;
+}

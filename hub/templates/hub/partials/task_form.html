@@ -7,28 +7,28 @@
 >
   {% csrf_token %}
   <div>
-    {{ task_form.title.label_tag(attrs={"class": "block text-sm font-medium"}) }}
+    <label for="{{ task_form.title.id_for_label }}" class="block text-sm font-medium">Title</label>
     {{ task_form.title }}
     {% if task_form.title.errors %}
       <div class="text-xs text-rose-600">{{ task_form.title.errors }}</div>
     {% endif %}
   </div>
   <div>
-    {{ task_form.description.label_tag(attrs={"class": "block text-sm font-medium"}) }}
+    <label for="{{ task_form.description.id_for_label }}" class="block text-sm font-medium">Description</label>
     {{ task_form.description }}
   </div>
   <div class="grid grid-cols-2 gap-3">
     <div>
-      {{ task_form.status.label_tag(attrs={"class": "block text-sm font-medium"}) }}
+      <label for="{{ task_form.status.id_for_label }}" class="block text-sm font-medium">Status</label>
       {{ task_form.status }}
     </div>
     <div>
-      {{ task_form.priority.label_tag(attrs={"class": "block text-sm font-medium"}) }}
+      <label for="{{ task_form.priority.id_for_label }}" class="block text-sm font-medium">Priority</label>
       {{ task_form.priority }}
     </div>
   </div>
   <div>
-    {{ task_form.parent.label_tag("Parent task (optional)", attrs={"class": "block text-sm font-medium"}) }}
+    <label for="{{ task_form.parent.id_for_label }}" class="block text-sm font-medium">Parent task (optional)</label>
     {{ task_form.parent }}
   </div>
   <button class="w-full rounded-full bg-[var(--sky)] text-white py-2 font-medium">Add Task</button>

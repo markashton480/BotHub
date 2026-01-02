@@ -218,6 +218,21 @@ class Message(models.Model):
         return f"{self.thread} ({self.created_at:%Y-%m-%d})"
 
 
+class Webhook(models.Model):
+    name = models.CharField(max_length=120, blank=True)
+    url = models.URLField()
+    secret = models.CharField(max_length=255, blank=True)
+    events = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at", "id"]
+
+    def __str__(self) -> str:
+        return self.name or self.url
+
+
 class AuditEvent(models.Model):
     actor = models.ForeignKey(
         User, null=True, blank=True, on_delete=models.SET_NULL, related_name="audit_events"

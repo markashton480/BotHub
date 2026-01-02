@@ -15,6 +15,18 @@ import secrets
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
+from django.urls import reverse_lazy
+
+
+def env_bool(name, default=False):
+    return os.getenv(name, str(default)).lower() in ("1", "true", "yes")
+
+
+def env_list(name, default):
+    value = os.getenv(name)
+    if not value:
+        return default
+    return [item.strip() for item in value.split(",") if item.strip()]
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +39,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.getenv("DJANGO_DEBUG", "true").lower() in ("1", "true", "yes")
+DEBUG = env_bool("DJANGO_DEBUG", default=True)
 
 if not SECRET_KEY:
     if DEBUG:
@@ -35,12 +47,14 @@ if not SECRET_KEY:
     else:
         raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set")
 
-ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+ALLOWED_HOSTS = env_list("DJANGO_ALLOWED_HOSTS", ["127.0.0.1", "localhost", "bothub.lintel.digital"])
+CSRF_TRUSTED_ORIGINS = env_list("DJANGO_CSRF_TRUSTED_ORIGINS", ["https://bothub.lintel.digital"])
 
 
 # Application definition
 
 INSTALLED_APPS = [
+    "unfold",
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -90,12 +104,25 @@ WSGI_APPLICATION = 'bothub.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DB_NAME = os.getenv("DB_NAME")
+if DB_NAME:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": DB_NAME,
+            "USER": os.getenv("DB_USER", "bothub"),
+            "PASSWORD": os.getenv("DB_PASSWORD", ""),
+            "HOST": os.getenv("DB_HOST", "localhost"),
+            "PORT": os.getenv("DB_PORT", "5432"),
+        }
     }
-}
+else:
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 
 # Password validation
@@ -132,8 +159,9 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / "staticfiles"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -154,3 +182,92 @@ AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
     "guardian.backends.ObjectPermissionBackend",
 ]
+
+WEBHOOK_TIMEOUT_SECONDS = int(os.getenv("WEBHOOK_TIMEOUT_SECONDS", "5"))
+
+UNFOLD = {
+    "SITE_TITLE": "BotHub",
+    "SITE_HEADER": "BotHub Admin",
+    "SITE_URL": "/admin/",
+    "THEME": "light",
+    "COLORS": {
+        "primary": {
+            "50": "#f0fdfa",
+            "100": "#ccfbf1",
+            "200": "#99f6e4",
+            "300": "#5eead4",
+            "400": "#2dd4bf",
+            "500": "#14b8a6",
+            "600": "#0d9488",
+            "700": "#0f766e",
+            "800": "#115e59",
+            "900": "#134e4a",
+            "950": "#042f2e",
+        }
+    },
+    "STYLES": ["/static/admin/bothub.css"],
+    "COMMAND": {
+        "search_models": True,
+        "show_history": False,
+        "search_callback": None,
+    },
+    "SIDEBAR": {
+        "show_search": True,
+        "command_search": True,
+        "show_all_applications": True,
+        "navigation": [
+            {
+                "title": "Core",
+                "items": [
+                    {"title": "Projects", "icon": "folder", "link": reverse_lazy("admin:hub_project_changelist")},
+                    {"title": "Tasks", "icon": "check_circle", "link": reverse_lazy("admin:hub_task_changelist")},
+                    {"title": "Tags", "icon": "label", "link": reverse_lazy("admin:hub_tag_changelist")},
+                    {"title": "Assignments", "icon": "person_add", "link": reverse_lazy("admin:hub_taskassignment_changelist")},
+                ],
+            },
+            {
+                "title": "Collaboration",
+                "items": [
+                    {"title": "Threads", "icon": "forum", "link": reverse_lazy("admin:hub_thread_changelist")},
+                    {"title": "Messages", "icon": "chat_bubble", "link": reverse_lazy("admin:hub_message_changelist")},
+                ],
+            },
+            {
+                "title": "Ops",
+                "items": [
+                    {"title": "Webhooks", "icon": "bolt", "link": reverse_lazy("admin:hub_webhook_changelist")},
+                    {"title": "Audit Events", "icon": "history", "link": reverse_lazy("admin:hub_auditevent_changelist")},
+                    {"title": "Tokens", "icon": "key", "link": reverse_lazy("admin:authtoken_tokenproxy_changelist")},
+                ],
+            },
+            {
+                "title": "Accounts",
+                "items": [
+                    {"title": "Users", "icon": "group", "link": reverse_lazy("admin:auth_user_changelist")},
+                    {"title": "Profiles", "icon": "account_circle", "link": reverse_lazy("admin:hub_userprofile_changelist")},
+                    {"title": "Groups", "icon": "groups", "link": reverse_lazy("admin:auth_group_changelist")},
+                ],
+            },
+        ],
+    },
+}
+
+LOG_FILE = os.getenv("DJANGO_LOG_FILE", "/var/log/bothub/django.log")
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": LOG_FILE,
+        },
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
+}

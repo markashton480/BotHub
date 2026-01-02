@@ -7,14 +7,14 @@
 >
   {% csrf_token %}
   <div>
-    {{ thread_form.title.label_tag(attrs={"class": "block text-sm font-medium"}) }}
+    <label for="{{ thread_form.title.id_for_label }}" class="block text-sm font-medium">Title</label>
     {{ thread_form.title }}
     {% if thread_form.title.errors %}
       <div class="text-xs text-rose-600">{{ thread_form.title.errors }}</div>
     {% endif %}
   </div>
   <div>
-    {{ thread_form.kind.label_tag("Type", attrs={"class": "block text-sm font-medium"}) }}
+    <label for="{{ thread_form.kind.id_for_label }}" class="block text-sm font-medium">Type</label>
     {{ thread_form.kind }}
   </div>
   <button class="w-full rounded-full bg-[var(--amber)] text-white py-2 font-medium">Start Thread</button>

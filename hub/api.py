@@ -2,7 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework import permissions, viewsets
 
 from .audit import log_event
-from .models import AuditEvent, Message, Project, ProjectMembership, Tag, Task, TaskAssignment, Thread, UserProfile
+from .models import AuditEvent, Message, Project, ProjectMembership, Tag, Task, TaskAssignment, Thread, UserProfile, Webhook
 from .permissions import (
     CanEditProject,
     CanViewProject,
@@ -20,6 +20,7 @@ from .serializers import (
     ThreadSerializer,
     UserProfileSerializer,
     UserSerializer,
+    WebhookSerializer,
 )
 
 User = get_user_model()
@@ -227,4 +228,10 @@ class MessageViewSet(viewsets.ModelViewSet):
 class AuditEventViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = AuditEvent.objects.all().select_related("actor", "target_content_type")
     serializer_class = AuditEventSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class WebhookViewSet(viewsets.ModelViewSet):
+    queryset = Webhook.objects.all()
+    serializer_class = WebhookSerializer
     permission_classes = [permissions.IsAuthenticated]
