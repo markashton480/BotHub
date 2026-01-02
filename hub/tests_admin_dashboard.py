@@ -20,7 +20,6 @@ class AdminDashboardTests(TestCase):
         Task.objects.create(project=project, title="Task One", created_by=self.admin_user)
         thread = Thread.objects.create(title="Thread One", project=project, created_by=self.admin_user)
         Message.objects.create(thread=thread, body="Hi", created_by=self.admin_user)
-        return project, thread
 
     def test_dashboard_renders_with_stats(self):
         self._build_data()
