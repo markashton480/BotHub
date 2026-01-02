@@ -1,10 +1,11 @@
 from django.contrib.admin.models import LogEntry
 from django.contrib.auth import get_user_model
+from django.db import connection
 from django.template.response import TemplateResponse
 from django.urls import path
 from unfold.sites import UnfoldAdminSite
 
-from hub.models import AuditEvent, Message, Project, Tag, Task, Thread, Webhook
+from hub.models import AuditEvent
 
 User = get_user_model()
 
@@ -23,13 +24,27 @@ class BotHubAdminSite(UnfoldAdminSite):
         return custom_urls + urls
 
     def dashboard_view(self, request):
-        stats = {
-            "projects": Project.objects.count(),
-            "tasks": Task.objects.count(),
-            "threads": Thread.objects.count(),
-            "messages": Message.objects.count(),
-            "users": User.objects.count(),
-        }
+        # Optimize stats collection with a single database query
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    (SELECT COUNT(*) FROM hub_project) as projects,
+                    (SELECT COUNT(*) FROM hub_task) as tasks,
+                    (SELECT COUNT(*) FROM hub_thread) as threads,
+                    (SELECT COUNT(*) FROM hub_message) as messages,
+                    (SELECT COUNT(*) FROM auth_user) as users
+                """
+            )
+            row = cursor.fetchone()
+            stats = {
+                "projects": row[0],
+                "tasks": row[1],
+                "threads": row[2],
+                "messages": row[3],
+                "users": row[4],
+            }
+
         recent_audit_events = (
             AuditEvent.objects.select_related("actor").order_by("-created_at")[:10]
         )
