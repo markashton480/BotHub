@@ -220,3 +220,23 @@ UNFOLD = {
         ],
     },
 }
+
+LOG_FILE = os.getenv("DJANGO_LOG_FILE", "/var/log/bothub/django.log")
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": LOG_FILE,
+        },
+    },
+    "loggers": {
+        "django.request": {
+            "handlers": ["file"],
+            "level": "ERROR",
+            "propagate": False,
+        },
+    },
+}
