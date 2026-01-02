@@ -4,6 +4,7 @@ from rest_framework import permissions, viewsets
 from .audit import log_event
 from .models import AuditEvent, Message, Project, ProjectMembership, Tag, Task, TaskAssignment, Thread, UserProfile, Webhook
 from .permissions import (
+    CanDeleteProject,
     CanEditProject,
     CanViewProject,
     filter_by_project_membership,
@@ -74,10 +75,12 @@ class ProjectViewSet(viewsets.ModelViewSet):
         log_event(actor, "project.created", instance)
 
     def get_permissions(self):
-        """Use CanEditProject for write operations."""
+        """Use appropriate permission for each action."""
         if self.action in ['create', 'list']:
             return [permissions.IsAuthenticated()]
-        elif self.action in ['update', 'partial_update', 'destroy']:
+        elif self.action == 'destroy':
+            return [permissions.IsAuthenticated(), CanDeleteProject()]
+        elif self.action in ['update', 'partial_update']:
             return [permissions.IsAuthenticated(), CanEditProject()]
         return [permissions.IsAuthenticated(), CanViewProject()]
 

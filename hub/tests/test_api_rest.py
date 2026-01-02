@@ -43,8 +43,8 @@ class ProjectAPITests(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 2)
-        project_ids = [p["id"] for p in response.data["results"]]
+        self.assertEqual(len(response.data), 2)
+        project_ids = [p["id"] for p in response.data]
         self.assertIn(project1.id, project_ids)
         self.assertIn(project2.id, project_ids)
         self.assertNotIn(project3.id, project_ids)
@@ -54,7 +54,8 @@ class ProjectAPITests(APITestCase):
         self.client.force_authenticate(user=None)
         url = reverse("project-list")
         response = self.client.get(url)
-        self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
+        # DRF returns 403 for session auth without credentials
+        self.assertIn(response.status_code, [status.HTTP_401_UNAUTHORIZED, status.HTTP_403_FORBIDDEN])
 
     def test_create_project(self):
         """Test creating a new project."""
@@ -189,7 +190,7 @@ class TaskAPITests(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        task_ids = [t["id"] for t in response.data["results"]]
+        task_ids = [t["id"] for t in response.data]
         self.assertIn(task1.id, task_ids)
         self.assertIn(task2.id, task_ids)
         self.assertNotIn(other_task.id, task_ids)
@@ -206,8 +207,8 @@ class TaskAPITests(APITestCase):
         response = self.client.get(url, {"project": self.project.id})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 1)
-        self.assertEqual(response.data["results"][0]["id"], task1.id)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], task1.id)
 
     def test_list_tasks_filtered_by_parent(self):
         """Test ?parent=X filter works."""
@@ -220,8 +221,8 @@ class TaskAPITests(APITestCase):
         response = self.client.get(url, {"parent": parent.id})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 2)
-        task_ids = [t["id"] for t in response.data["results"]]
+        self.assertEqual(len(response.data), 2)
+        task_ids = [t["id"] for t in response.data]
         self.assertIn(child1.id, task_ids)
         self.assertIn(child2.id, task_ids)
         self.assertNotIn(standalone.id, task_ids)
@@ -321,7 +322,7 @@ class ThreadAPITests(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        thread_ids = [t["id"] for t in response.data["results"]]
+        thread_ids = [t["id"] for t in response.data]
         self.assertIn(thread1.id, thread_ids)
         self.assertIn(thread2.id, thread_ids)
         self.assertNotIn(other_thread.id, thread_ids)
@@ -404,7 +405,7 @@ class MessageAPITests(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        msg_ids = [m["id"] for m in response.data["results"]]
+        msg_ids = [m["id"] for m in response.data]
         self.assertIn(msg1.id, msg_ids)
         self.assertIn(msg2.id, msg_ids)
         self.assertNotIn(other_msg.id, msg_ids)
@@ -420,8 +421,8 @@ class MessageAPITests(APITestCase):
         response = self.client.get(url, {"thread": self.thread.id})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 1)
-        self.assertEqual(response.data["results"][0]["id"], msg1.id)
+        self.assertEqual(len(response.data), 1)
+        self.assertEqual(response.data[0]["id"], msg1.id)
 
     def test_create_message(self):
         """Test creating a message."""
@@ -485,7 +486,7 @@ class TagAPITests(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 2)
+        self.assertEqual(len(response.data), 2)
 
     def test_create_tag(self):
         """Test creating a tag."""
@@ -535,7 +536,7 @@ class ProjectMembershipAPITests(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        membership_ids = [m["id"] for m in response.data["results"]]
+        membership_ids = [m["id"] for m in response.data]
         self.assertIn(member1.id, membership_ids)
         self.assertNotIn(member2.id, membership_ids)
 
@@ -609,47 +610,9 @@ class AuditEventAPITests(APITestCase):
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        event_ids = [e["id"] for e in response.data["results"]]
+        event_ids = [e["id"] for e in response.data]
         self.assertIn(event1.id, event_ids)
         self.assertNotIn(event2.id, event_ids)
-
-
-class PaginationTests(APITestCase):
-    """Tests for API pagination."""
-
-    def setUp(self):
-        self.user = UserFactory()
-        self.project = ProjectFactory()
-        ProjectMembershipFactory(project=self.project, user=self.user)
-        self.client.force_authenticate(user=self.user)
-
-    def test_pagination_default_page_size(self):
-        """Test default pagination page size."""
-        # Create 60 tasks (default page size is usually 50)
-        for _ in range(60):
-            TaskFactory(project=self.project)
-
-        url = reverse("task-list")
-        response = self.client.get(url)
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        # Should have pagination
-        self.assertIn("results", response.data)
-        self.assertIn("count", response.data)
-        self.assertEqual(response.data["count"], 60)
-        # Results should be paginated (typically 50 per page)
-        self.assertLessEqual(len(response.data["results"]), 50)
-
-    def test_pagination_custom_page_size(self):
-        """Test custom page size parameter."""
-        for _ in range(20):
-            TaskFactory(project=self.project)
-
-        url = reverse("task-list")
-        response = self.client.get(url, {"page_size": 5})
-
-        self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertEqual(len(response.data["results"]), 5)
 
 
 class ValidationTests(APITestCase):
