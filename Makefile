@@ -10,3 +10,6 @@ test:
 
 lint:
 	$(PYTHON) manage.py check
+
+collectstatic:
+	$(PYTHON) manage.py collectstatic --noinput
