@@ -39,7 +39,7 @@ router.register("webhooks", hub_api.WebhookViewSet, basename="webhook")
 
 urlpatterns = [
     path("admin/", bot_admin_site.urls),
-    path("", RedirectView.as_view(url="/admin/", permanent=False)),
+    path("", include("hub.urls")),
     path("api/", include(router.urls)),
     path("api/auth/token/", obtain_auth_token, name="api-token"),
     path("graphql/", GraphQLView.as_view(schema=schema, graphiql=True)),

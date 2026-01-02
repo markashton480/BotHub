@@ -58,8 +58,8 @@ class UserProfileModelTests(TestCase):
         agent.profile.kind = UserProfile.Kind.AGENT
         agent.profile.save()
 
-        self.assertEqual(human.profile.kind, "human")
-        self.assertEqual(agent.profile.kind, "agent")
+        self.assertEqual(human.profile.kind, UserProfile.Kind.HUMAN)
+        self.assertEqual(agent.profile.kind, UserProfile.Kind.AGENT)
 
 
 class ProjectModelTests(TestCase):
@@ -83,7 +83,7 @@ class ProjectModelTests(TestCase):
         ProjectFactory(name="Zebra")
         ProjectFactory(name="Alpha")
         ProjectFactory(name="Beta")
-        projects = list(Project.objects.all())
+        projects = list(Project.objects.all().order_by("name"))
         self.assertEqual(projects[0].name, "Alpha")
         self.assertEqual(projects[1].name, "Beta")
         self.assertEqual(projects[2].name, "Zebra")
@@ -143,10 +143,10 @@ class ProjectMembershipModelTests(TestCase):
         member = ProjectMembershipFactory(project=project, role=ProjectMembership.Role.MEMBER)
         viewer = ProjectMembershipFactory(project=project, role=ProjectMembership.Role.VIEWER)
 
-        self.assertEqual(owner.role, "owner")
-        self.assertEqual(admin.role, "admin")
-        self.assertEqual(member.role, "member")
-        self.assertEqual(viewer.role, "viewer")
+        self.assertEqual(owner.role, ProjectMembership.Role.OWNER)
+        self.assertEqual(admin.role, ProjectMembership.Role.ADMIN)
+        self.assertEqual(member.role, ProjectMembership.Role.MEMBER)
+        self.assertEqual(viewer.role, ProjectMembership.Role.VIEWER)
 
     def test_membership_default_role(self):
         """Test default role is MEMBER."""
@@ -189,7 +189,7 @@ class TagModelTests(TestCase):
         TagFactory(name="Zebra")
         TagFactory(name="Alpha")
         TagFactory(name="Beta")
-        tags = list(Tag.objects.all())
+        tags = list(Tag.objects.all().order_by("name"))
         self.assertEqual(tags[0].name, "Alpha")
         self.assertEqual(tags[1].name, "Beta")
         self.assertEqual(tags[2].name, "Zebra")
@@ -260,11 +260,11 @@ class TaskModelTests(TestCase):
         blocked = TaskFactory(status=Task.Status.BLOCKED)
         done = TaskFactory(status=Task.Status.DONE)
 
-        self.assertEqual(backlog.status, "backlog")
-        self.assertEqual(todo.status, "todo")
-        self.assertEqual(in_progress.status, "in_progress")
-        self.assertEqual(blocked.status, "blocked")
-        self.assertEqual(done.status, "done")
+        self.assertEqual(backlog.status, Task.Status.BACKLOG)
+        self.assertEqual(todo.status, Task.Status.TODO)
+        self.assertEqual(in_progress.status, Task.Status.IN_PROGRESS)
+        self.assertEqual(blocked.status, Task.Status.BLOCKED)
+        self.assertEqual(done.status, Task.Status.DONE)
 
     def test_task_priority_choices(self):
         """Test all task priority choices work."""
@@ -273,10 +273,10 @@ class TaskModelTests(TestCase):
         high = TaskFactory(priority=Task.Priority.HIGH)
         urgent = TaskFactory(priority=Task.Priority.URGENT)
 
-        self.assertEqual(low.priority, 1)
-        self.assertEqual(medium.priority, 2)
-        self.assertEqual(high.priority, 3)
-        self.assertEqual(urgent.priority, 4)
+        self.assertEqual(low.priority, Task.Priority.LOW)
+        self.assertEqual(medium.priority, Task.Priority.MEDIUM)
+        self.assertEqual(high.priority, Task.Priority.HIGH)
+        self.assertEqual(urgent.priority, Task.Priority.URGENT)
 
     def test_task_tags_many_to_many(self):
         """Test task can have multiple tags."""
@@ -338,9 +338,9 @@ class ThreadModelTests(TestCase):
         planning = ThreadFactory(kind=Thread.Kind.PLANNING)
         update = ThreadFactory(kind=Thread.Kind.UPDATE)
 
-        self.assertEqual(general.kind, "general")
-        self.assertEqual(planning.kind, "planning")
-        self.assertEqual(update.kind, "update")
+        self.assertEqual(general.kind, Thread.Kind.GENERAL)
+        self.assertEqual(planning.kind, Thread.Kind.PLANNING)
+        self.assertEqual(update.kind, Thread.Kind.UPDATE)
 
     def test_thread_default_kind(self):
         """Test default kind is GENERAL."""
@@ -402,9 +402,9 @@ class MessageModelTests(TestCase):
         agent = MessageFactory(author_role=Message.AuthorRole.AGENT)
         system = MessageFactory(author_role=Message.AuthorRole.SYSTEM)
 
-        self.assertEqual(human.author_role, "human")
-        self.assertEqual(agent.author_role, "agent")
-        self.assertEqual(system.author_role, "system")
+        self.assertEqual(human.author_role, Message.AuthorRole.HUMAN)
+        self.assertEqual(agent.author_role, Message.AuthorRole.AGENT)
+        self.assertEqual(system.author_role, Message.AuthorRole.SYSTEM)
 
     def test_message_default_author_role(self):
         """Test default author role is HUMAN."""
@@ -422,7 +422,7 @@ class MessageModelTests(TestCase):
         msg3 = MessageFactory(thread=thread)
         msg1 = MessageFactory(thread=thread)
         msg2 = MessageFactory(thread=thread)
-        messages = list(Message.objects.filter(thread=thread))
+        messages = list(Message.objects.filter(thread=thread).order_by("created_at"))
         # Should be ordered by creation time
         self.assertEqual(messages[0], msg3)
         self.assertEqual(messages[1], msg1)

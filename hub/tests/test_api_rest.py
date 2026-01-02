@@ -39,7 +39,7 @@ class ProjectAPITests(APITestCase):
         ProjectMembershipFactory(project=project1, user=self.user)
         ProjectMembershipFactory(project=project2, user=self.user)
 
-        url = reverse("api:project-list")
+        url = reverse("project-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -52,13 +52,13 @@ class ProjectAPITests(APITestCase):
     def test_list_projects_unauthenticated(self):
         """Test unauthenticated users cannot list projects."""
         self.client.force_authenticate(user=None)
-        url = reverse("api:project-list")
+        url = reverse("project-list")
         response = self.client.get(url)
         self.assertEqual(response.status_code, status.HTTP_401_UNAUTHORIZED)
 
     def test_create_project(self):
         """Test creating a new project."""
-        url = reverse("api:project-list")
+        url = reverse("project-list")
         data = {"name": "New Project", "description": "Test description"}
         response = self.client.post(url, data)
 
@@ -72,7 +72,7 @@ class ProjectAPITests(APITestCase):
 
     def test_create_project_auto_owner_membership(self):
         """Test project creator automatically becomes OWNER."""
-        url = reverse("api:project-list")
+        url = reverse("project-list")
         data = {"name": "Auto Owner Test"}
         response = self.client.post(url, data)
 
@@ -91,7 +91,7 @@ class ProjectAPITests(APITestCase):
         project = ProjectFactory()
         ProjectMembershipFactory(project=project, user=self.user)
 
-        url = reverse("api:project-detail", args=[project.id])
+        url = reverse("project-detail", args=[project.id])
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -102,7 +102,7 @@ class ProjectAPITests(APITestCase):
         """Test non-member cannot retrieve project."""
         project = ProjectFactory()
 
-        url = reverse("api:project-detail", args=[project.id])
+        url = reverse("project-detail", args=[project.id])
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
@@ -116,7 +116,7 @@ class ProjectAPITests(APITestCase):
             role=ProjectMembership.Role.VIEWER
         )
 
-        url = reverse("api:project-detail", args=[project.id])
+        url = reverse("project-detail", args=[project.id])
         data = {"name": "Updated Name"}
         response = self.client.patch(url, data)
 
@@ -131,7 +131,7 @@ class ProjectAPITests(APITestCase):
             role=ProjectMembership.Role.MEMBER
         )
 
-        url = reverse("api:project-detail", args=[project.id])
+        url = reverse("project-detail", args=[project.id])
         data = {"name": "Updated Name"}
         response = self.client.patch(url, data)
 
@@ -147,7 +147,7 @@ class ProjectAPITests(APITestCase):
             role=ProjectMembership.Role.ADMIN
         )
 
-        url = reverse("api:project-detail", args=[project.id])
+        url = reverse("project-detail", args=[project.id])
         response = self.client.delete(url)
 
         # ADMIN cannot delete, only OWNER can
@@ -162,7 +162,7 @@ class ProjectAPITests(APITestCase):
             role=ProjectMembership.Role.OWNER
         )
 
-        url = reverse("api:project-detail", args=[project.id])
+        url = reverse("project-detail", args=[project.id])
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
@@ -185,7 +185,7 @@ class TaskAPITests(APITestCase):
         # Task from inaccessible project
         other_task = TaskFactory()
 
-        url = reverse("api:task-list")
+        url = reverse("task-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -200,9 +200,9 @@ class TaskAPITests(APITestCase):
         ProjectMembershipFactory(project=project2, user=self.user)
 
         task1 = TaskFactory(project=self.project)
-        task2 = TaskFactory(project=project2)
+        TaskFactory(project=project2)
 
-        url = reverse("api:task-list")
+        url = reverse("task-list")
         response = self.client.get(url, {"project": self.project.id})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -216,7 +216,7 @@ class TaskAPITests(APITestCase):
         child2 = TaskFactory(project=self.project, parent=parent)
         standalone = TaskFactory(project=self.project)
 
-        url = reverse("api:task-list")
+        url = reverse("task-list")
         response = self.client.get(url, {"parent": parent.id})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -228,7 +228,7 @@ class TaskAPITests(APITestCase):
 
     def test_create_task(self):
         """Test creating a task."""
-        url = reverse("api:task-list")
+        url = reverse("task-list")
         data = {
             "project": self.project.id,
             "title": "New Task",
@@ -247,7 +247,7 @@ class TaskAPITests(APITestCase):
         tag1 = TagFactory()
         tag2 = TagFactory()
 
-        url = reverse("api:task-list")
+        url = reverse("task-list")
         data = {
             "project": self.project.id,
             "title": "Tagged Task",
@@ -267,7 +267,7 @@ class TaskAPITests(APITestCase):
         membership.role = ProjectMembership.Role.VIEWER
         membership.save()
 
-        url = reverse("api:task-detail", args=[task.id])
+        url = reverse("task-detail", args=[task.id])
         data = {"title": "Updated Title"}
         response = self.client.patch(url, data)
 
@@ -277,7 +277,7 @@ class TaskAPITests(APITestCase):
         """Test MEMBER can update task."""
         task = TaskFactory(project=self.project)
 
-        url = reverse("api:task-detail", args=[task.id])
+        url = reverse("task-detail", args=[task.id])
         data = {"status": "done"}
         response = self.client.patch(url, data)
 
@@ -289,7 +289,7 @@ class TaskAPITests(APITestCase):
         other_project = ProjectFactory()
         parent = TaskFactory(project=other_project)
 
-        url = reverse("api:task-list")
+        url = reverse("task-list")
         data = {
             "project": self.project.id,
             "title": "Invalid Parent Task",
@@ -317,7 +317,7 @@ class ThreadAPITests(APITestCase):
         # Thread from inaccessible project
         other_thread = ThreadFactory()
 
-        url = reverse("api:thread-list")
+        url = reverse("thread-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -328,7 +328,7 @@ class ThreadAPITests(APITestCase):
 
     def test_create_thread_with_project(self):
         """Test creating thread attached to project."""
-        url = reverse("api:thread-list")
+        url = reverse("thread-list")
         data = {
             "title": "New Thread",
             "kind": "planning",
@@ -345,7 +345,7 @@ class ThreadAPITests(APITestCase):
         """Test creating thread attached to task."""
         task = TaskFactory(project=self.project)
 
-        url = reverse("api:thread-list")
+        url = reverse("thread-list")
         data = {
             "title": "Task Thread",
             "kind": "update",
@@ -359,7 +359,7 @@ class ThreadAPITests(APITestCase):
 
     def test_create_thread_requires_scope(self):
         """Test thread creation requires project or task."""
-        url = reverse("api:thread-list")
+        url = reverse("thread-list")
         data = {"title": "No Scope Thread", "kind": "general"}
         response = self.client.post(url, data)
 
@@ -371,7 +371,7 @@ class ThreadAPITests(APITestCase):
         """Test thread cannot have both project and task."""
         task = TaskFactory(project=self.project)
 
-        url = reverse("api:thread-list")
+        url = reverse("thread-list")
         data = {
             "title": "Both Scopes",
             "kind": "general",
@@ -400,7 +400,7 @@ class MessageAPITests(APITestCase):
         # Message from inaccessible thread
         other_msg = MessageFactory()
 
-        url = reverse("api:message-list")
+        url = reverse("message-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -414,9 +414,9 @@ class MessageAPITests(APITestCase):
         thread2 = ThreadFactory(project=self.project, task=None)
 
         msg1 = MessageFactory(thread=self.thread)
-        msg2 = MessageFactory(thread=thread2)
+        MessageFactory(thread=thread2)
 
-        url = reverse("api:message-list")
+        url = reverse("message-list")
         response = self.client.get(url, {"thread": self.thread.id})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -425,7 +425,7 @@ class MessageAPITests(APITestCase):
 
     def test_create_message(self):
         """Test creating a message."""
-        url = reverse("api:message-list")
+        url = reverse("message-list")
         data = {
             "thread": self.thread.id,
             "body": "Test message content"
@@ -438,7 +438,7 @@ class MessageAPITests(APITestCase):
 
     def test_create_message_auto_fills_author_label(self):
         """Test author_label auto-filled from username."""
-        url = reverse("api:message-list")
+        url = reverse("message-list")
         data = {
             "thread": self.thread.id,
             "body": "Auto author test"
@@ -458,7 +458,7 @@ class MessageAPITests(APITestCase):
 
         self.client.force_authenticate(user=agent_user)
 
-        url = reverse("api:message-list")
+        url = reverse("message-list")
         data = {
             "thread": self.thread.id,
             "body": "Agent message"
@@ -478,10 +478,10 @@ class TagAPITests(APITestCase):
 
     def test_list_tags(self):
         """Test listing all tags."""
-        tag1 = TagFactory()
-        tag2 = TagFactory()
+        TagFactory()
+        TagFactory()
 
-        url = reverse("api:tag-list")
+        url = reverse("tag-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -489,7 +489,7 @@ class TagAPITests(APITestCase):
 
     def test_create_tag(self):
         """Test creating a tag."""
-        url = reverse("api:tag-list")
+        url = reverse("tag-list")
         data = {"name": "New Tag", "color": "#FF5733"}
         response = self.client.post(url, data)
 
@@ -502,7 +502,7 @@ class TagAPITests(APITestCase):
         """Test creating tag with duplicate name fails."""
         TagFactory(name="Duplicate")
 
-        url = reverse("api:tag-list")
+        url = reverse("tag-list")
         data = {"name": "Duplicate"}
         response = self.client.post(url, data)
 
@@ -531,7 +531,7 @@ class ProjectMembershipAPITests(APITestCase):
         other_project = ProjectFactory()
         member2 = ProjectMembershipFactory(project=other_project)
 
-        url = reverse("api:projectmembership-list")
+        url = reverse("membership-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -547,7 +547,7 @@ class ProjectMembershipAPITests(APITestCase):
         membership.save()
 
         new_user = UserFactory()
-        url = reverse("api:projectmembership-list")
+        url = reverse("membership-list")
         data = {
             "project": self.project.id,
             "user": new_user.id,
@@ -560,7 +560,7 @@ class ProjectMembershipAPITests(APITestCase):
     def test_create_membership_admin_can_add(self):
         """Test ADMIN can add members."""
         new_user = UserFactory()
-        url = reverse("api:projectmembership-list")
+        url = reverse("membership-list")
         data = {
             "project": self.project.id,
             "user": new_user.id,
@@ -582,7 +582,7 @@ class AuditEventAPITests(APITestCase):
 
     def test_list_audit_events_read_only(self):
         """Test audit events are read-only."""
-        url = reverse("api:auditevent-list")
+        url = reverse("audit-event-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -605,7 +605,7 @@ class AuditEventAPITests(APITestCase):
         event1 = log_event(self.user, "project.created", accessible_project)
         event2 = log_event(self.user, "project.created", inaccessible_project)
 
-        url = reverse("api:auditevent-list")
+        url = reverse("audit-event-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -629,7 +629,7 @@ class PaginationTests(APITestCase):
         for _ in range(60):
             TaskFactory(project=self.project)
 
-        url = reverse("api:task-list")
+        url = reverse("task-list")
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -645,7 +645,7 @@ class PaginationTests(APITestCase):
         for _ in range(20):
             TaskFactory(project=self.project)
 
-        url = reverse("api:task-list")
+        url = reverse("task-list")
         response = self.client.get(url, {"page_size": 5})
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -663,7 +663,7 @@ class ValidationTests(APITestCase):
 
     def test_create_task_missing_required_field(self):
         """Test creating task without required field fails."""
-        url = reverse("api:task-list")
+        url = reverse("task-list")
         data = {"project": self.project.id}  # Missing title
         response = self.client.post(url, data)
 
@@ -672,7 +672,7 @@ class ValidationTests(APITestCase):
 
     def test_create_task_invalid_status(self):
         """Test creating task with invalid status fails."""
-        url = reverse("api:task-list")
+        url = reverse("task-list")
         data = {
             "project": self.project.id,
             "title": "Test Task",
@@ -691,7 +691,7 @@ class ValidationTests(APITestCase):
         membership.role = ProjectMembership.Role.ADMIN
         membership.save()
 
-        url = reverse("api:projectmembership-list")
+        url = reverse("membership-list")
         data = {
             "project": self.project.id,
             "user": new_user.id,
@@ -711,14 +711,14 @@ class EdgeCaseTests(APITestCase):
 
     def test_retrieve_nonexistent_project(self):
         """Test retrieving nonexistent project returns 404."""
-        url = reverse("api:project-detail", args=[99999])
+        url = reverse("project-detail", args=[99999])
         response = self.client.get(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_update_nonexistent_task(self):
         """Test updating nonexistent task returns 404."""
-        url = reverse("api:task-detail", args=[99999])
+        url = reverse("task-detail", args=[99999])
         data = {"title": "Updated"}
         response = self.client.patch(url, data)
 
@@ -726,7 +726,7 @@ class EdgeCaseTests(APITestCase):
 
     def test_delete_nonexistent_thread(self):
         """Test deleting nonexistent thread returns 404."""
-        url = reverse("api:thread-detail", args=[99999])
+        url = reverse("thread-detail", args=[99999])
         response = self.client.delete(url)
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)

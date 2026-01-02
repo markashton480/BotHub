@@ -130,7 +130,7 @@ class MessageInput:
     thread_id: strawberry.ID
     body: str
     author_label: Optional[str] = ""
-    author_role: str = "human"
+    author_role: Optional[str] = None
 
 
 @strawberry.type
@@ -272,11 +272,21 @@ class Mutation:
         target_project = thread.project if thread.project else (thread.task.project if thread.task else None)
         if target_project and not user_can_edit_project(actor, target_project):
             raise GraphQLError("Permission denied: You don't have permission to create messages in this thread.")
+
+        # Auto-detect author role if not provided
+        author_role = input.author_role
+        if author_role is None:
+            profile = getattr(actor, 'profile', None)
+            if profile and profile.kind == 'agent':
+                author_role = Message.AuthorRole.AGENT
+            else:
+                author_role = Message.AuthorRole.HUMAN
+
         message = Message.objects.create(
             thread=thread,
             body=input.body,
             author_label=input.author_label or (actor.get_username() if actor else ""),
-            author_role=input.author_role,
+            author_role=author_role,
             created_by=actor,
         )
         log_event(actor, "message.created", message)

@@ -157,8 +157,8 @@ class ProjectDetailViewTests(TestCase):
         self.client.force_login(self.user)
         ProjectMembershipFactory(project=self.project, user=self.user)
 
-        task1 = TaskFactory(project=self.project)
-        task2 = TaskFactory(project=self.project)
+        TaskFactory(project=self.project)
+        TaskFactory(project=self.project)
 
         response = self.client.get(self.url)
 
@@ -171,8 +171,8 @@ class ProjectDetailViewTests(TestCase):
         self.client.force_login(self.user)
         ProjectMembershipFactory(project=self.project, user=self.user)
 
-        thread1 = ThreadFactory(project=self.project, task=None)
-        thread2 = ThreadFactory(project=self.project, task=None)
+        ThreadFactory(project=self.project, task=None)
+        ThreadFactory(project=self.project, task=None)
 
         response = self.client.get(self.url)
 
@@ -341,8 +341,8 @@ class ThreadDetailViewTests(TestCase):
         self.client.force_login(self.user)
         ProjectMembershipFactory(project=self.project, user=self.user)
 
-        msg1 = MessageFactory(thread=self.thread)
-        msg2 = MessageFactory(thread=self.thread)
+        MessageFactory(thread=self.thread)
+        MessageFactory(thread=self.thread)
 
         response = self.client.get(self.url)
 

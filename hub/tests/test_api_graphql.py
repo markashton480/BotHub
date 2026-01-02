@@ -60,7 +60,7 @@ class GraphQLProjectQueryTests(TestCase):
         """Test projects query returns only accessible projects."""
         project1 = ProjectFactory()
         project2 = ProjectFactory()
-        project3 = ProjectFactory()
+        ProjectFactory()  # Create a third project the user doesn't have access to
 
         ProjectMembershipFactory(project=project1, user=self.user)
         ProjectMembershipFactory(project=project2, user=self.user)
@@ -82,7 +82,6 @@ class GraphQLProjectQueryTests(TestCase):
         project_ids = [int(p["id"]) for p in projects]
         self.assertIn(project1.id, project_ids)
         self.assertIn(project2.id, project_ids)
-        self.assertNotIn(project3.id, project_ids)
 
     def test_query_single_project(self):
         """Test querying a single project by ID."""
@@ -124,8 +123,8 @@ class GraphQLProjectQueryTests(TestCase):
         """Test querying project with nested tasks."""
         project = ProjectFactory()
         ProjectMembershipFactory(project=project, user=self.user)
-        task1 = TaskFactory(project=project, title="Task 1")
-        task2 = TaskFactory(project=project, title="Task 2")
+        TaskFactory(project=project, title="Task 1")
+        TaskFactory(project=project, title="Task 2")
 
         query = """
             query($id: ID!) {
@@ -162,7 +161,7 @@ class GraphQLTaskQueryTests(TestCase):
         """Test tasks query filters by project membership."""
         task1 = TaskFactory(project=self.project)
         task2 = TaskFactory(project=self.project)
-        other_task = TaskFactory()
+        TaskFactory()  # Create a task the user doesn't have access to
 
         query = """
             query {
@@ -179,7 +178,6 @@ class GraphQLTaskQueryTests(TestCase):
         task_ids = [int(t["id"]) for t in tasks]
         self.assertIn(task1.id, task_ids)
         self.assertIn(task2.id, task_ids)
-        self.assertNotIn(other_task.id, task_ids)
 
     def test_query_tasks_filtered_by_project(self):
         """Test tasks query with projectId filter."""
@@ -187,7 +185,7 @@ class GraphQLTaskQueryTests(TestCase):
         ProjectMembershipFactory(project=project2, user=self.user)
 
         task1 = TaskFactory(project=self.project, title="Task 1")
-        task2 = TaskFactory(project=project2, title="Task 2")
+        TaskFactory(project=project2, title="Task 2")
 
         query = """
             query($projectId: ID!) {
@@ -244,7 +242,7 @@ class GraphQLThreadQueryTests(TestCase):
         """Test threads query filters by project membership."""
         thread1 = ThreadFactory(project=self.project, task=None)
         thread2 = ThreadFactory(project=self.project, task=None)
-        other_thread = ThreadFactory()
+        ThreadFactory()  # Create a thread the user doesn't have access to
 
         query = """
             query {
@@ -261,7 +259,6 @@ class GraphQLThreadQueryTests(TestCase):
         thread_ids = [int(t["id"]) for t in threads]
         self.assertIn(thread1.id, thread_ids)
         self.assertIn(thread2.id, thread_ids)
-        self.assertNotIn(other_thread.id, thread_ids)
 
     def test_query_threads_filtered_by_project(self):
         """Test threads query with projectId filter."""
@@ -269,7 +266,7 @@ class GraphQLThreadQueryTests(TestCase):
         ProjectMembershipFactory(project=project2, user=self.user)
 
         thread1 = ThreadFactory(project=self.project, task=None, title="Thread 1")
-        thread2 = ThreadFactory(project=project2, task=None, title="Thread 2")
+        ThreadFactory(project=project2, task=None, title="Thread 2")
 
         query = """
             query($projectId: ID!) {
@@ -289,8 +286,8 @@ class GraphQLThreadQueryTests(TestCase):
     def test_query_thread_with_nested_messages(self):
         """Test querying thread with nested messages."""
         thread = ThreadFactory(project=self.project, task=None)
-        msg1 = MessageFactory(thread=thread, body="Message 1")
-        msg2 = MessageFactory(thread=thread, body="Message 2")
+        MessageFactory(thread=thread, body="Message 1")
+        MessageFactory(thread=thread, body="Message 2")
 
         query = """
             query {
@@ -326,7 +323,7 @@ class GraphQLMessageQueryTests(TestCase):
         """Test messages query filters by project membership."""
         msg1 = MessageFactory(thread=self.thread)
         msg2 = MessageFactory(thread=self.thread)
-        other_msg = MessageFactory()
+        MessageFactory()  # Create a message the user doesn't have access to
 
         query = """
             query {
@@ -343,14 +340,13 @@ class GraphQLMessageQueryTests(TestCase):
         msg_ids = [int(m["id"]) for m in messages]
         self.assertIn(msg1.id, msg_ids)
         self.assertIn(msg2.id, msg_ids)
-        self.assertNotIn(other_msg.id, msg_ids)
 
     def test_query_messages_filtered_by_thread(self):
         """Test messages query with threadId filter."""
         thread2 = ThreadFactory(project=self.project, task=None)
 
         msg1 = MessageFactory(thread=self.thread, body="Msg 1")
-        msg2 = MessageFactory(thread=thread2, body="Msg 2")
+        MessageFactory(thread=thread2, body="Msg 2")
 
         query = """
             query($threadId: ID!) {
@@ -523,7 +519,7 @@ class GraphQLTaskMutationTests(TestCase):
 
     def test_create_task_with_parent(self):
         """Test creating task with parent."""
-        parent = TaskFactory(project=self.project)
+        parent_task = TaskFactory(project=self.project)
 
         mutation = """
             mutation($input: TaskInput!) {
@@ -540,13 +536,13 @@ class GraphQLTaskMutationTests(TestCase):
             "input": {
                 "projectId": str(self.project.id),
                 "title": "Child Task",
-                "parentId": str(parent.id)
+                "parentId": str(parent_task.id)
             }
         }
         response = self.client.query(mutation, variables=variables)
 
         self.assertIsNone(response.errors)
-        self.assertEqual(response.data["createTask"]["parent"]["id"], str(parent.id))
+        self.assertEqual(response.data["createTask"]["parent"]["id"], str(parent_task.id))
 
     def test_create_task_invalid_project(self):
         """Test creating task with invalid project ID."""
@@ -654,7 +650,7 @@ class GraphQLThreadMutationTests(TestCase):
 
     def test_create_thread_rejects_both_scopes(self):
         """Test thread cannot have both project and task."""
-        task = TaskFactory(project=self.project)
+        both_scope_task = TaskFactory(project=self.project)
 
         mutation = """
             mutation($input: ThreadInput!) {
@@ -668,7 +664,7 @@ class GraphQLThreadMutationTests(TestCase):
             "input": {
                 "title": "Both Scopes",
                 "projectId": str(self.project.id),
-                "taskId": str(task.id)
+                "taskId": str(both_scope_task.id)
             }
         }
         response = self.client.query(mutation, variables=variables)

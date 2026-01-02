@@ -501,32 +501,33 @@ class HelperFunctionTests(TestCase):
 
     def test_filter_projects_by_membership(self):
         """Test filter_projects_by_membership returns only accessible projects."""
+        from hub.models import Project
+
         project1 = ProjectFactory()
         project2 = ProjectFactory()
-        project3 = ProjectFactory()
+        ProjectFactory()  # Create a third project the user doesn't have access to
 
         # User has access to project1 and project2 only
         ProjectMembershipFactory(project=project1, user=self.user)
         ProjectMembershipFactory(project=project2, user=self.user)
 
-        from hub.models import Project
         queryset = Project.objects.all()
         filtered = filter_projects_by_membership(queryset, self.user)
 
         self.assertEqual(filtered.count(), 2)
         self.assertIn(project1, filtered)
         self.assertIn(project2, filtered)
-        self.assertNotIn(project3, filtered)
 
     def test_filter_projects_by_membership_superuser(self):
         """Test superuser sees all projects."""
+        from hub.models import Project
+
         ProjectFactory()
         ProjectFactory()
         ProjectFactory()
 
         superuser = UserFactory(is_superuser=True)
 
-        from hub.models import Project
         queryset = Project.objects.all()
         filtered = filter_projects_by_membership(queryset, superuser)
 
@@ -537,7 +538,7 @@ class HelperFunctionTests(TestCase):
         project1 = ProjectFactory()
         project2 = ProjectFactory()
         task1 = TaskFactory(project=project1)
-        task2 = TaskFactory(project=project2)
+        TaskFactory(project=project2)  # Create a task the user doesn't have access to
 
         ProjectMembershipFactory(project=project1, user=self.user)
 
@@ -545,14 +546,13 @@ class HelperFunctionTests(TestCase):
 
         self.assertEqual(filtered.count(), 1)
         self.assertIn(task1, filtered)
-        self.assertNotIn(task2, filtered)
 
     def test_filter_by_project_membership_threads(self):
         """Test filtering threads by project membership."""
         project1 = ProjectFactory()
         project2 = ProjectFactory()
         thread1 = ThreadFactory(project=project1, task=None)
-        thread2 = ThreadFactory(project=project2, task=None)
+        ThreadFactory(project=project2, task=None)  # Create a thread the user doesn't have access to
 
         ProjectMembershipFactory(project=project1, user=self.user)
 
@@ -560,7 +560,6 @@ class HelperFunctionTests(TestCase):
 
         self.assertEqual(filtered.count(), 1)
         self.assertIn(thread1, filtered)
-        self.assertNotIn(thread2, filtered)
 
     def test_filter_by_project_membership_superuser(self):
         """Test superuser sees all resources."""

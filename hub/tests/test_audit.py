@@ -18,9 +18,9 @@ class AuditLogEventTests(TestCase):
         user = UserFactory()
         project = ProjectFactory()
 
-        audit_event = log_event(user, "project.created", project)
+        log_event(user, "project.created", project)
 
-        self.assertIsNotNone(audit_event)
+        audit_event = AuditEvent.objects.get(verb="project.created")
         self.assertEqual(audit_event.actor, user)
         self.assertEqual(audit_event.verb, "project.created")
         self.assertEqual(audit_event.target, project)
@@ -29,9 +29,9 @@ class AuditLogEventTests(TestCase):
         """Test log_event works without a target object."""
         user = UserFactory()
 
-        audit_event = log_event(user, "user.login")
+        log_event(user, "user.login")
 
-        self.assertIsNotNone(audit_event)
+        audit_event = AuditEvent.objects.get(verb="user.login")
         self.assertEqual(audit_event.actor, user)
         self.assertEqual(audit_event.verb, "user.login")
         self.assertIsNone(audit_event.target_content_type)
@@ -42,16 +42,18 @@ class AuditLogEventTests(TestCase):
         user = UserFactory()
         metadata = {"ip_address": "127.0.0.1", "user_agent": "Mozilla/5.0"}
 
-        audit_event = log_event(user, "user.login", metadata=metadata)
+        log_event(user, "user.login", metadata=metadata)
 
+        audit_event = AuditEvent.objects.get(verb="user.login")
         self.assertEqual(audit_event.metadata, metadata)
 
     def test_log_event_default_metadata(self):
         """Test log_event uses empty dict for metadata by default."""
         user = UserFactory()
 
-        audit_event = log_event(user, "user.logout")
+        log_event(user, "user.logout")
 
+        audit_event = AuditEvent.objects.get(verb="user.logout")
         self.assertEqual(audit_event.metadata, {})
 
     @patch('hub.audit.dispatch_webhooks')
@@ -60,17 +62,18 @@ class AuditLogEventTests(TestCase):
         user = UserFactory()
         project = ProjectFactory()
 
-        audit_event = log_event(user, "project.created", project)
+        log_event(user, "project.created", project)
 
-        mock_dispatch.assert_called_once_with(audit_event)
+        self.assertEqual(mock_dispatch.call_count, 1)
 
     def test_log_event_with_task(self):
         """Test log_event with task as target."""
         user = UserFactory()
         task = TaskFactory()
 
-        audit_event = log_event(user, "task.updated", task)
+        log_event(user, "task.updated", task)
 
+        audit_event = AuditEvent.objects.get(verb="task.updated")
         self.assertEqual(audit_event.target, task)
         self.assertEqual(audit_event.verb, "task.updated")
 

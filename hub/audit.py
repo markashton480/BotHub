@@ -18,3 +18,4 @@ def log_event(actor, verb, target=None, metadata=None):
         metadata=metadata or {},
     )
     dispatch_webhooks(audit_event)
+    return audit_event
