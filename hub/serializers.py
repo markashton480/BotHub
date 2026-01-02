@@ -5,6 +5,7 @@ from .models import (
     AuditEvent,
     Message,
     Project,
+    ProjectMembership,
     Tag,
     Task,
     TaskAssignment,
@@ -32,7 +33,16 @@ class UserSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "username", "email", "profile"]
 
 
+class ProjectMembershipSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ProjectMembership
+        fields = ["id", "project", "user", "role", "invited_by", "created_at"]
+        read_only_fields = ["invited_by", "created_at"]
+
+
 class ProjectSerializer(serializers.ModelSerializer):
+    user_role = serializers.SerializerMethodField()
+
     class Meta:
         model = Project
         fields = [
@@ -43,8 +53,24 @@ class ProjectSerializer(serializers.ModelSerializer):
             "created_by",
             "created_at",
             "updated_at",
+            "user_role",
         ]
-        read_only_fields = ["created_by", "created_at", "updated_at"]
+        read_only_fields = ["created_by", "created_at", "updated_at", "user_role"]
+
+    def get_user_role(self, obj):
+        """Return the requesting user's role in this project."""
+        request = self.context.get('request')
+        if not request or not request.user or not request.user.is_authenticated:
+            return None
+
+        if request.user.is_superuser:
+            return ProjectMembership.Role.OWNER
+
+        try:
+            membership = ProjectMembership.objects.get(project=obj, user=request.user)
+            return membership.role
+        except ProjectMembership.DoesNotExist:
+            return None
 
 
 class TagSerializer(serializers.ModelSerializer):
