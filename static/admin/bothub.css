@@ -53,3 +53,33 @@ a {
 a:hover {
   color: var(--bothub-accent-strong);
 }
+
+#content-main form {
+  max-width: 1100px;
+}
+
+#content-main .module.aligned {
+  border-color: var(--bothub-border);
+}
+
+#content-main .form-row textarea,
+#content-main .form-row .vLargeTextField {
+  min-height: 120px;
+  max-height: 360px;
+  resize: vertical;
+}
+
+#content-main .form-row textarea.monospace {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+    "Courier New", monospace;
+  font-size: 0.85rem;
+  background: #f8fafc;
+}
+
+#content-main .form-row input[type="text"],
+#content-main .form-row input[type="email"],
+#content-main .form-row input[type="url"],
+#content-main .form-row select,
+#content-main .form-row textarea {
+  max-width: 100%;
+}
