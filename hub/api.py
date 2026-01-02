@@ -18,6 +18,20 @@ from .serializers import (
 User = get_user_model()
 
 
+def get_actor(request):
+    user = getattr(request, "user", None)
+    if user and user.is_authenticated:
+        return user
+    return None
+
+
+def parse_int(value):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
 class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all().select_related("profile")
     serializer_class = UserSerializer
@@ -33,9 +47,10 @@ class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
 class ProjectViewSet(viewsets.ModelViewSet):
     queryset = Project.objects.all().select_related("created_by")
     serializer_class = ProjectSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        actor = self.request.user if self.request.user.is_authenticated else None
+        actor = get_actor(self.request)
         instance = serializer.save(created_by=actor)
         log_event(actor, "project.created", instance)
 
@@ -43,15 +58,17 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         queryset = Task.objects.all().select_related("project", "parent", "created_by").prefetch_related("tags")
-        project_id = self.request.query_params.get("project")
-        parent_id = self.request.query_params.get("parent")
+        project_id = parse_int(self.request.query_params.get("project"))
+        parent_id = parse_int(self.request.query_params.get("parent"))
         if project_id:
             queryset = queryset.filter(project_id=project_id)
         if parent_id:
@@ -59,7 +76,7 @@ class TaskViewSet(viewsets.ModelViewSet):
         return queryset
 
     def perform_create(self, serializer):
-        actor = self.request.user if self.request.user.is_authenticated else None
+        actor = get_actor(self.request)
         instance = serializer.save(created_by=actor)
         log_event(actor, "task.created", instance)
 
@@ -67,9 +84,10 @@ class TaskViewSet(viewsets.ModelViewSet):
 class TaskAssignmentViewSet(viewsets.ModelViewSet):
     queryset = TaskAssignment.objects.all().select_related("task", "assignee", "added_by")
     serializer_class = TaskAssignmentSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        actor = self.request.user if self.request.user.is_authenticated else None
+        actor = get_actor(self.request)
         instance = serializer.save(added_by=actor)
         log_event(actor, "task.assignment.created", instance)
 
@@ -77,25 +95,27 @@ class TaskAssignmentViewSet(viewsets.ModelViewSet):
 class ThreadViewSet(viewsets.ModelViewSet):
     queryset = Thread.objects.all().select_related("project", "task", "created_by")
     serializer_class = ThreadSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def perform_create(self, serializer):
-        actor = self.request.user if self.request.user.is_authenticated else None
+        actor = get_actor(self.request)
         instance = serializer.save(created_by=actor)
         log_event(actor, "thread.created", instance)
 
 
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         queryset = Message.objects.all().select_related("thread", "created_by")
-        thread_id = self.request.query_params.get("thread")
+        thread_id = parse_int(self.request.query_params.get("thread"))
         if thread_id:
             queryset = queryset.filter(thread_id=thread_id)
         return queryset
 
     def perform_create(self, serializer):
-        user = self.request.user if self.request.user.is_authenticated else None
+        user = get_actor(self.request)
         author_role = serializer.validated_data.get("author_role")
         author_label = serializer.validated_data.get("author_label")
         if user and not author_label:

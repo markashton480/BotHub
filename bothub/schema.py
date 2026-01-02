@@ -6,11 +6,20 @@ import strawberry
 import strawberry_django
 
 from django.contrib.auth import get_user_model
+from strawberry.exceptions import GraphQLError
 
 from hub.audit import log_event
 from hub.models import Message, Project, Tag, Task, Thread, UserProfile
 
 User = get_user_model()
+
+
+def get_actor(info):
+    request = info.context
+    user = getattr(request, "user", None)
+    if user and user.is_authenticated:
+        return user
+    return None
 
 
 @strawberry_django.type(User, fields=["id", "username", "email"])
@@ -147,65 +156,69 @@ class Query:
 class Mutation:
     @strawberry.mutation
     def create_project(self, info, input: ProjectInput) -> ProjectType:
-        request = info.context
-        user = getattr(request, "user", None)
+        actor = get_actor(info)
         project = Project.objects.create(
             name=input.name,
             description=input.description or "",
-            created_by=user if user and user.is_authenticated else None,
+            created_by=actor,
         )
-        log_event(user if user and user.is_authenticated else None, "project.created", project)
+        log_event(actor, "project.created", project)
         return project
 
     @strawberry.mutation
     def create_task(self, info, input: TaskInput) -> TaskType:
-        request = info.context
-        user = getattr(request, "user", None)
-        project = Project.objects.get(pk=input.project_id)
-        parent = Task.objects.filter(pk=input.parent_id).first() if input.parent_id else None
+        actor = get_actor(info)
+        project = Project.objects.filter(pk=input.project_id).first()
+        if not project:
+            raise GraphQLError("Project not found.")
+        parent = None
+        if input.parent_id:
+            parent = Task.objects.filter(pk=input.parent_id).first()
+            if not parent:
+                raise GraphQLError("Parent task not found.")
         task = Task.objects.create(
             project=project,
             parent=parent,
             title=input.title,
             description=input.description or "",
-            created_by=user if user and user.is_authenticated else None,
+            created_by=actor,
         )
-        log_event(user if user and user.is_authenticated else None, "task.created", task)
+        log_event(actor, "task.created", task)
         return task
 
     @strawberry.mutation
     def create_thread(self, info, input: ThreadInput) -> ThreadType:
-        request = info.context
-        user = getattr(request, "user", None)
+        actor = get_actor(info)
         project = Project.objects.filter(pk=input.project_id).first() if input.project_id else None
         task = Task.objects.filter(pk=input.task_id).first() if input.task_id else None
         if not project and not task:
-            raise ValueError("Thread must attach to a project or task.")
+            raise GraphQLError("Thread must attach to a project or task.")
         if project and task:
-            raise ValueError("Thread can only attach to one scope.")
+            raise GraphQLError("Thread can only attach to one scope.")
         thread = Thread.objects.create(
             title=input.title,
             kind=input.kind,
             project=project,
             task=task,
-            created_by=user if user and user.is_authenticated else None,
+            created_by=actor,
         )
-        log_event(user if user and user.is_authenticated else None, "thread.created", thread)
+        log_event(actor, "thread.created", thread)
         return thread
 
     @strawberry.mutation
     def create_message(self, info, input: MessageInput) -> MessageType:
-        request = info.context
-        user = getattr(request, "user", None)
-        thread = Thread.objects.get(pk=input.thread_id)
+        actor = get_actor(info)
+        thread = Thread.objects.filter(pk=input.thread_id).first()
+        if not thread:
+            raise GraphQLError("Thread not found.")
         message = Message.objects.create(
             thread=thread,
             body=input.body,
-            author_label=input.author_label or (user.get_username() if user and user.is_authenticated else ""),
+            author_label=input.author_label or (actor.get_username() if actor else ""),
             author_role=input.author_role,
-            created_by=user if user and user.is_authenticated else None,
+            created_by=actor,
         )
-        log_event(user if user and user.is_authenticated else None, "message.created", message)
+        log_event(actor, "message.created", message)
         return message
 
 
