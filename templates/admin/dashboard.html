@@ -5,31 +5,31 @@
 <div class="bh-dashboard">
   <header class="bh-dashboard__header">
     <div>
-      <p class="bh-eyebrow">Admin</p>
-      <h1>Dashboard</h1>
-      <p class="bh-subtitle">Key metrics and recent activity</p>
+      <p class="bh-eyebrow">{% trans "Admin" %}</p>
+      <h1>{% trans "Dashboard" %}</h1>
+      <p class="bh-subtitle">{% trans "Key metrics and recent activity" %}</p>
     </div>
   </header>
 
   <section class="bh-grid bh-grid--stats">
     <article class="bh-card bh-card--stat">
-      <p class="bh-label">Projects</p>
+      <p class="bh-label">{% trans "Projects" %}</p>
       <p class="bh-value">{{ stats.projects }}</p>
     </article>
     <article class="bh-card bh-card--stat">
-      <p class="bh-label">Tasks</p>
+      <p class="bh-label">{% trans "Tasks" %}</p>
       <p class="bh-value">{{ stats.tasks }}</p>
     </article>
     <article class="bh-card bh-card--stat">
-      <p class="bh-label">Threads</p>
+      <p class="bh-label">{% trans "Threads" %}</p>
       <p class="bh-value">{{ stats.threads }}</p>
     </article>
     <article class="bh-card bh-card--stat">
-      <p class="bh-label">Messages</p>
+      <p class="bh-label">{% trans "Messages" %}</p>
       <p class="bh-value">{{ stats.messages }}</p>
     </article>
     <article class="bh-card bh-card--stat">
-      <p class="bh-label">Users</p>
+      <p class="bh-label">{% trans "Users" %}</p>
       <p class="bh-value">{{ stats.users }}</p>
     </article>
   </section>
@@ -38,17 +38,18 @@
     <article class="bh-card">
       <header class="bh-card__header">
         <div>
-          <h2>Recent Audit Events</h2>
-          <p class="bh-subtitle">Application-level auditing</p>
+          <h2>{% trans "Recent Audit Events" %}</h2>
+          <p class="bh-subtitle">{% trans "Application-level auditing" %}</p>
         </div>
       </header>
       <div class="bh-card__body">
         <table class="bh-table">
+          <caption class="sr-only">{% trans "Recent Audit Events" %}</caption>
           <thead>
             <tr>
-              <th>When</th>
-              <th>Actor</th>
-              <th>Verb</th>
+              <th scope="col">{% trans "When" %}</th>
+              <th scope="col">{% trans "Actor" %}</th>
+              <th scope="col">{% trans "Verb" %}</th>
             </tr>
           </thead>
           <tbody>
@@ -69,18 +70,19 @@
     <article class="bh-card">
       <header class="bh-card__header">
         <div>
-          <h2>Recent Admin Activity</h2>
-          <p class="bh-subtitle">Django admin change log</p>
+          <h2>{% trans "Recent Admin Activity" %}</h2>
+          <p class="bh-subtitle">{% trans "Django admin change log" %}</p>
         </div>
       </header>
       <div class="bh-card__body">
         <table class="bh-table">
+          <caption class="sr-only">{% trans "Recent Admin Activity" %}</caption>
           <thead>
             <tr>
-              <th>When</th>
-              <th>User</th>
-              <th>Action</th>
-              <th>Object</th>
+              <th scope="col">{% trans "When" %}</th>
+              <th scope="col">{% trans "User" %}</th>
+              <th scope="col">{% trans "Action" %}</th>
+              <th scope="col">{% trans "Object" %}</th>
             </tr>
           </thead>
           <tbody>
