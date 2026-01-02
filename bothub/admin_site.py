@@ -5,7 +5,7 @@ from django.template.response import TemplateResponse
 from django.urls import path
 from unfold.sites import UnfoldAdminSite
 
-from hub.models import AuditEvent
+from hub.models import AuditEvent, Message, Project, Task, Thread
 
 User = get_user_model()
 
@@ -24,16 +24,23 @@ class BotHubAdminSite(UnfoldAdminSite):
         return custom_urls + urls
 
     def dashboard_view(self, request):
-        # Optimize stats collection with a single database query
+        # Optimize stats collection with a single database query using Django's table introspection
+        # Table names come from Django's ORM metadata, not user input, so they're safe to use in f-strings
+        project_table = Project._meta.db_table
+        task_table = Task._meta.db_table
+        thread_table = Thread._meta.db_table
+        message_table = Message._meta.db_table
+        user_table = User._meta.db_table
+
         with connection.cursor() as cursor:
             cursor.execute(
-                """
+                f"""
                 SELECT
-                    (SELECT COUNT(*) FROM hub_project) as projects,
-                    (SELECT COUNT(*) FROM hub_task) as tasks,
-                    (SELECT COUNT(*) FROM hub_thread) as threads,
-                    (SELECT COUNT(*) FROM hub_message) as messages,
-                    (SELECT COUNT(*) FROM auth_user) as users
+                    (SELECT COUNT(*) FROM {project_table}) as projects,
+                    (SELECT COUNT(*) FROM {task_table}) as tasks,
+                    (SELECT COUNT(*) FROM {thread_table}) as threads,
+                    (SELECT COUNT(*) FROM {message_table}) as messages,
+                    (SELECT COUNT(*) FROM {user_table}) as users
                 """
             )
             row = cursor.fetchone()
