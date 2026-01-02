@@ -2,96 +2,102 @@
 {% load i18n %}
 
 {% block content %}
-<div class="unfold-card">
-  <div class="unfold-card__header">
-    <h1 class="unfold-card__title">Dashboard</h1>
-    <p class="unfold-card__subtitle">Key metrics and recent activity</p>
-  </div>
-  <div class="unfold-card__body">
-    <div class="unfold-grid unfold-grid-cols-1 md:unfold-grid-cols-3 unfold-gap-4">
-      <div class="unfold-stat">
-        <div class="unfold-stat__label">Projects</div>
-        <div class="unfold-stat__value">{{ stats.projects }}</div>
-      </div>
-      <div class="unfold-stat">
-        <div class="unfold-stat__label">Tasks</div>
-        <div class="unfold-stat__value">{{ stats.tasks }}</div>
-      </div>
-      <div class="unfold-stat">
-        <div class="unfold-stat__label">Threads</div>
-        <div class="unfold-stat__value">{{ stats.threads }}</div>
-      </div>
-      <div class="unfold-stat">
-        <div class="unfold-stat__label">Messages</div>
-        <div class="unfold-stat__value">{{ stats.messages }}</div>
-      </div>
-      <div class="unfold-stat">
-        <div class="unfold-stat__label">Users</div>
-        <div class="unfold-stat__value">{{ stats.users }}</div>
-      </div>
+<div class="bh-dashboard">
+  <header class="bh-dashboard__header">
+    <div>
+      <p class="bh-eyebrow">Admin</p>
+      <h1>Dashboard</h1>
+      <p class="bh-subtitle">Key metrics and recent activity</p>
     </div>
-  </div>
-</div>
+  </header>
 
-<div class="unfold-grid unfold-grid-cols-1 lg:unfold-grid-cols-2 unfold-gap-4 unfold-mt-4">
-  <div class="unfold-card">
-    <div class="unfold-card__header">
-      <h2 class="unfold-card__title">Recent Audit Events</h2>
-      <p class="unfold-card__subtitle">Latest actions captured from application-level auditing</p>
-    </div>
-    <div class="unfold-card__body">
-      <table class="unfold-table">
-        <thead>
-          <tr>
-            <th>When</th>
-            <th>Actor</th>
-            <th>Verb</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for event in recent_audit_events %}
-          <tr>
-            <td>{{ event.created_at }}</td>
-            <td>{{ event.actor }}</td>
-            <td>{{ event.verb }}</td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="3">No audit events yet.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
+  <section class="bh-grid bh-grid--stats">
+    <article class="bh-card bh-card--stat">
+      <p class="bh-label">Projects</p>
+      <p class="bh-value">{{ stats.projects }}</p>
+    </article>
+    <article class="bh-card bh-card--stat">
+      <p class="bh-label">Tasks</p>
+      <p class="bh-value">{{ stats.tasks }}</p>
+    </article>
+    <article class="bh-card bh-card--stat">
+      <p class="bh-label">Threads</p>
+      <p class="bh-value">{{ stats.threads }}</p>
+    </article>
+    <article class="bh-card bh-card--stat">
+      <p class="bh-label">Messages</p>
+      <p class="bh-value">{{ stats.messages }}</p>
+    </article>
+    <article class="bh-card bh-card--stat">
+      <p class="bh-label">Users</p>
+      <p class="bh-value">{{ stats.users }}</p>
+    </article>
+  </section>
 
-  <div class="unfold-card">
-    <div class="unfold-card__header">
-      <h2 class="unfold-card__title">Recent Admin Activity</h2>
-      <p class="unfold-card__subtitle">Latest changes recorded by Django admin</p>
-    </div>
-    <div class="unfold-card__body">
-      <table class="unfold-table">
-        <thead>
-          <tr>
-            <th>When</th>
-            <th>User</th>
-            <th>Action</th>
-            <th>Object</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for log in recent_log_entries %}
-          <tr>
-            <td>{{ log.action_time }}</td>
-            <td>{{ log.user }}</td>
-            <td>{{ log.get_action_flag_display }}</td>
-            <td>{{ log.object_repr }}</td>
-          </tr>
-          {% empty %}
-          <tr><td colspan="4">No admin activity yet.</td></tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
+  <section class="bh-grid bh-grid--panels">
+    <article class="bh-card">
+      <header class="bh-card__header">
+        <div>
+          <h2>Recent Audit Events</h2>
+          <p class="bh-subtitle">Application-level auditing</p>
+        </div>
+      </header>
+      <div class="bh-card__body">
+        <table class="bh-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>Actor</th>
+              <th>Verb</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for event in recent_audit_events %}
+            <tr>
+              <td>{{ event.created_at }}</td>
+              <td>{{ event.actor }}</td>
+              <td>{{ event.verb }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3">No audit events yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </article>
+
+    <article class="bh-card">
+      <header class="bh-card__header">
+        <div>
+          <h2>Recent Admin Activity</h2>
+          <p class="bh-subtitle">Django admin change log</p>
+        </div>
+      </header>
+      <div class="bh-card__body">
+        <table class="bh-table">
+          <thead>
+            <tr>
+              <th>When</th>
+              <th>User</th>
+              <th>Action</th>
+              <th>Object</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in recent_log_entries %}
+            <tr>
+              <td>{{ log.action_time }}</td>
+              <td>{{ log.user }}</td>
+              <td>{{ log.get_action_flag_display }}</td>
+              <td>{{ log.object_repr }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No admin activity yet.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </article>
+  </section>
 </div>
 {% endblock %}
