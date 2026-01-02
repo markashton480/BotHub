@@ -1,4 +1,4 @@
-.PHONY: test lint
+.PHONY: test lint coverage coverage-report coverage-html
 
 PYTHON := .venv/bin/python
 ifeq ($(wildcard $(PYTHON)),)
@@ -13,6 +13,17 @@ test:
 
 lint:
 	$(PYTHON) manage.py check
+
+coverage:
+	coverage run --source='.' manage.py test
+	coverage report
+	coverage html
+
+coverage-report:
+	coverage report
+
+coverage-html:
+	coverage html
 
 collectstatic:
 	$(PYTHON) manage.py collectstatic --noinput
