@@ -7,14 +7,14 @@
 >
   {% csrf_token %}
   <div>
-    {{ project_form.name.label_tag(attrs={"class": "block text-sm font-medium"}) }}
+    <label for="{{ project_form.name.id_for_label }}" class="block text-sm font-medium">Name</label>
     {{ project_form.name }}
     {% if project_form.name.errors %}
       <div class="text-xs text-rose-600">{{ project_form.name.errors }}</div>
     {% endif %}
   </div>
   <div>
-    {{ project_form.description.label_tag(attrs={"class": "block text-sm font-medium"}) }}
+    <label for="{{ project_form.description.id_for_label }}" class="block text-sm font-medium">Description</label>
     {{ project_form.description }}
   </div>
   <button class="w-full rounded-full bg-[var(--teal)] text-white py-2 font-medium">Create</button>
