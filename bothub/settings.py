@@ -197,7 +197,7 @@ UNFOLD = {
             "950": "#042f2e",
         }
     },
-    "STYLES": ["admin/bothub.css"],
+    "STYLES": ["/static/admin/bothub.css"],
     "COMMAND": {
         "search_models": True,
         "show_history": False,
