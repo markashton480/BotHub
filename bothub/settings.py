@@ -271,20 +271,39 @@ UNFOLD = {
     },
 }
 
-LOG_FILE = os.getenv("DJANGO_LOG_FILE", "/var/log/bothub/django.log")
+LOG_FILE = os.getenv("DJANGO_LOG_FILE", str(BASE_DIR / "bothub.log"))
+_log_handler = {
+    "level": "ERROR",
+    "class": "logging.StreamHandler",
+}
+if LOG_FILE:
+    log_dir = os.path.dirname(LOG_FILE) or "."
+    try:
+        os.makedirs(log_dir, exist_ok=True)
+        with open(LOG_FILE, "a"):
+            pass
+        _log_handler = {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": LOG_FILE,
+            "delay": True,
+        }
+    except OSError:
+        # Fallback to console if file is not writable (e.g., CI)
+        _log_handler = {
+            "level": "ERROR",
+            "class": "logging.StreamHandler",
+        }
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "handlers": {
-        "file": {
-            "level": "ERROR",
-            "class": "logging.FileHandler",
-            "filename": LOG_FILE,
-        },
+        "default": _log_handler,
     },
     "loggers": {
         "django.request": {
-            "handlers": ["file"],
+            "handlers": ["default"],
             "level": "ERROR",
             "propagate": False,
         },
