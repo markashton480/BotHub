@@ -1,4 +1,6 @@
 from django.contrib.admin import AdminSite
+from django.http import HttpResponse
+from django.urls import path
 
 from hub.models import AuditEvent, Message, Project, Tag, Task, Thread, Webhook
 
@@ -8,6 +10,19 @@ class BotHubAdminSite(AdminSite):
     site_title = "BotHub Admin"
     index_title = "Dashboard"
     index_template = "admin/index.html"
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path("search/", self.admin_view(self.command_search), name="search"),
+        ]
+        return custom_urls + urls
+
+    def command_search(self, request):
+        # Unfold command palette expects these IDs in the response.
+        return HttpResponse(
+            '<div id="command-results-list"></div><div id="command-results-note"></div>'
+        )
 
     def index(self, request, extra_context=None):
         extra_context = extra_context or {}
