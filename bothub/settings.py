@@ -15,6 +15,7 @@ import secrets
 from pathlib import Path
 
 from django.core.exceptions import ImproperlyConfigured
+from django.urls import reverse_lazy
 
 
 def env_bool(name, default=False):
@@ -212,33 +213,33 @@ UNFOLD = {
             {
                 "title": "Core",
                 "items": [
-                    {"title": "Projects", "icon": "folder", "link": "admin:hub_project_changelist"},
-                    {"title": "Tasks", "icon": "check_circle", "link": "admin:hub_task_changelist"},
-                    {"title": "Tags", "icon": "label", "link": "admin:hub_tag_changelist"},
-                    {"title": "Assignments", "icon": "person_add", "link": "admin:hub_taskassignment_changelist"},
+                    {"title": "Projects", "icon": "folder", "link": reverse_lazy("admin:hub_project_changelist")},
+                    {"title": "Tasks", "icon": "check_circle", "link": reverse_lazy("admin:hub_task_changelist")},
+                    {"title": "Tags", "icon": "label", "link": reverse_lazy("admin:hub_tag_changelist")},
+                    {"title": "Assignments", "icon": "person_add", "link": reverse_lazy("admin:hub_taskassignment_changelist")},
                 ],
             },
             {
                 "title": "Collaboration",
                 "items": [
-                    {"title": "Threads", "icon": "forum", "link": "admin:hub_thread_changelist"},
-                    {"title": "Messages", "icon": "chat_bubble", "link": "admin:hub_message_changelist"},
+                    {"title": "Threads", "icon": "forum", "link": reverse_lazy("admin:hub_thread_changelist")},
+                    {"title": "Messages", "icon": "chat_bubble", "link": reverse_lazy("admin:hub_message_changelist")},
                 ],
             },
             {
                 "title": "Ops",
                 "items": [
-                    {"title": "Webhooks", "icon": "bolt", "link": "admin:hub_webhook_changelist"},
-                    {"title": "Audit Events", "icon": "history", "link": "admin:hub_auditevent_changelist"},
-                    {"title": "Tokens", "icon": "key", "link": "admin:authtoken_tokenproxy_changelist"},
+                    {"title": "Webhooks", "icon": "bolt", "link": reverse_lazy("admin:hub_webhook_changelist")},
+                    {"title": "Audit Events", "icon": "history", "link": reverse_lazy("admin:hub_auditevent_changelist")},
+                    {"title": "Tokens", "icon": "key", "link": reverse_lazy("admin:authtoken_tokenproxy_changelist")},
                 ],
             },
             {
                 "title": "Accounts",
                 "items": [
-                    {"title": "Users", "icon": "group", "link": "admin:auth_user_changelist"},
-                    {"title": "Profiles", "icon": "account_circle", "link": "admin:hub_userprofile_changelist"},
-                    {"title": "Groups", "icon": "groups", "link": "admin:auth_group_changelist"},
+                    {"title": "Users", "icon": "group", "link": reverse_lazy("admin:auth_user_changelist")},
+                    {"title": "Profiles", "icon": "account_circle", "link": reverse_lazy("admin:hub_userprofile_changelist")},
+                    {"title": "Groups", "icon": "groups", "link": reverse_lazy("admin:auth_group_changelist")},
                 ],
             },
         ],
