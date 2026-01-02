@@ -30,7 +30,6 @@ class GraphQLTestClient(BaseGraphQLTestClient):
     def request(self, body, headers=None, files=None):
         # Create a mock request object with authenticated user
         from unittest.mock import Mock
-        import strawberry
 
         request = Mock()
         request.user = self.request_user
@@ -43,7 +42,33 @@ class GraphQLTestClient(BaseGraphQLTestClient):
             operation_name=body.get("operationName"),
         )
 
-        return result
+        # Wrap the ExecutionResult in a mock response with a json() method
+        response = Mock()
+        response.json = lambda: {
+            "data": result.data,
+            "errors": [{"message": str(e)} for e in result.errors] if result.errors else None,
+        }
+        response.status_code = 200
+        response.errors = result.errors  # Add errors attribute for test assertions
+        response.data = result.data  # Add data attribute for test assertions
+        return response
+
+    def query(self, query, variables=None, files=None, headers=None, asserts_errors=True):
+        """
+        Override query() to optionally skip error assertion for error-case testing.
+        """
+        body = {"query": query}
+        if variables:
+            body["variables"] = variables
+
+        response = self.request(body, headers, files)
+
+        # Only assert no errors if asserts_errors is True (default Strawberry behavior)
+        # This allows tests to check error conditions
+        if asserts_errors and response.errors:
+            assert response.errors is None
+
+        return response
 
 
 class GraphQLProjectQueryTests(TestCase):
@@ -64,7 +89,7 @@ class GraphQLProjectQueryTests(TestCase):
                 }
             }
         """
-        response = client.query(query)
+        response = client.query(query, asserts_errors=False)
         self.assertIsNotNone(response.errors)
 
     def test_query_projects_returns_user_projects(self):
@@ -125,7 +150,7 @@ class GraphQLProjectQueryTests(TestCase):
                 }
             }
         """
-        response = self.client.query(query, variables={"id": project.id})
+        response = self.client.query(query, variables={"id": project.id}, asserts_errors=False)
 
         self.assertIsNotNone(response.errors)
         self.assertIn("Permission denied", str(response.errors[0].message))
@@ -452,7 +477,7 @@ class GraphQLProjectMutationTests(TestCase):
                 "name": "Unauthenticated Project"
             }
         }
-        response = client.query(mutation, variables=variables)
+        response = client.query(mutation, variables=variables, asserts_errors=False)
 
         self.assertIsNotNone(response.errors)
         self.assertIn("Authentication required", str(response.errors[0].message))
@@ -523,7 +548,7 @@ class GraphQLTaskMutationTests(TestCase):
                 "title": "Unauthorized Task"
             }
         }
-        response = self.client.query(mutation, variables=variables)
+        response = self.client.query(mutation, variables=variables, asserts_errors=False)
 
         self.assertIsNotNone(response.errors)
         self.assertIn("Permission denied", str(response.errors[0].message))
@@ -571,7 +596,7 @@ class GraphQLTaskMutationTests(TestCase):
                 "title": "Invalid Project Task"
             }
         }
-        response = self.client.query(mutation, variables=variables)
+        response = self.client.query(mutation, variables=variables, asserts_errors=False)
 
         self.assertIsNotNone(response.errors)
         self.assertIn("Project not found", str(response.errors[0].message))
@@ -654,7 +679,7 @@ class GraphQLThreadMutationTests(TestCase):
                 "title": "No Scope Thread"
             }
         }
-        response = self.client.query(mutation, variables=variables)
+        response = self.client.query(mutation, variables=variables, asserts_errors=False)
 
         self.assertIsNotNone(response.errors)
         self.assertIn("must attach", str(response.errors[0].message))
@@ -678,7 +703,7 @@ class GraphQLThreadMutationTests(TestCase):
                 "taskId": str(both_scope_task.id)
             }
         }
-        response = self.client.query(mutation, variables=variables)
+        response = self.client.query(mutation, variables=variables, asserts_errors=False)
 
         self.assertIsNotNone(response.errors)
         self.assertIn("one scope", str(response.errors[0].message))
@@ -767,7 +792,7 @@ class GraphQLMessageMutationTests(TestCase):
                 "body": "Unauthorized message"
             }
         }
-        response = self.client.query(mutation, variables=variables)
+        response = self.client.query(mutation, variables=variables, asserts_errors=False)
 
         self.assertIsNotNone(response.errors)
         self.assertIn("Permission denied", str(response.errors[0].message))
@@ -788,7 +813,7 @@ class GraphQLMessageMutationTests(TestCase):
                 "body": "Invalid thread message"
             }
         }
-        response = self.client.query(mutation, variables=variables)
+        response = self.client.query(mutation, variables=variables, asserts_errors=False)
 
         self.assertIsNotNone(response.errors)
         self.assertIn("Thread not found", str(response.errors[0].message))
