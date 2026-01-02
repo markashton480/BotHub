@@ -211,6 +211,12 @@ UNFOLD = {
         "show_all_applications": True,
         "navigation": [
             {
+                "title": "Overview",
+                "items": [
+                    {"title": "Dashboard", "icon": "dashboard", "link": reverse_lazy("admin:dashboard")},
+                ],
+            },
+            {
                 "title": "Core",
                 "items": [
                     {"title": "Projects", "icon": "folder", "link": reverse_lazy("admin:hub_project_changelist")},
