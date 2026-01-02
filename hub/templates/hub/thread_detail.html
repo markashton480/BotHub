@@ -1,0 +1,36 @@
+{% extends 'hub/base.html' %}
+
+{% block title %}BotHub | {{ thread.title }}{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between">
+  <div>
+    <h1 class="text-3xl font-semibold">{{ thread.title }}</h1>
+    <p class="text-slate-600 mt-1">{{ thread.get_kind_display }} thread</p>
+  </div>
+  {% if thread.project_id %}
+    <a href="{% url 'hub:project-detail' project_id=thread.project_id %}" class="text-sm text-slate-600 hover:text-slate-900">Back to project</a>
+  {% endif %}
+</div>
+
+<div class="grid gap-6 lg:grid-cols-3 mt-6">
+  <section class="card p-6 lg:col-span-2">
+    <h2 class="text-xl font-semibold">Messages</h2>
+    <div id="message-list" class="mt-4 space-y-3">
+      {% for message in messages %}
+        {% include 'hub/partials/message_row.html' with message=message %}
+      {% empty %}
+        <div class="text-slate-500">No messages yet.</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <aside class="card p-6">
+    <h2 class="text-xl font-semibold">Reply</h2>
+    <p class="text-slate-600 mt-1">Drop a note or agent update.</p>
+    <div class="mt-4" id="message-form">
+      {% include 'hub/partials/message_form.html' with thread=thread message_form=message_form %}
+    </div>
+  </aside>
+</div>
+{% endblock %}

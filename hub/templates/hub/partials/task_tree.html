@@ -1,0 +1,26 @@
+{% if task_tree %}
+  <ul class="space-y-2">
+    {% for node in task_tree %}
+      <li>
+        <div class="p-3 rounded-2xl border border-slate-200/70 bg-white/70">
+          <div class="flex items-center justify-between">
+            <div>
+              <div class="font-medium">{{ node.task.title }}</div>
+              {% if node.task.description %}
+                <div class="text-sm text-slate-600">{{ node.task.description }}</div>
+              {% endif %}
+            </div>
+            <div class="text-xs uppercase tracking-wide text-slate-500">{{ node.task.get_status_display }}</div>
+          </div>
+        </div>
+        {% if node.children %}
+          <div class="ml-6 mt-2">
+            {% include 'hub/partials/task_tree.html' with task_tree=node.children %}
+          </div>
+        {% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <div class="text-slate-500">No tasks yet.</div>
+{% endif %}

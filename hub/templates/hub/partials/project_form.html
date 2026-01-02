@@ -1,0 +1,21 @@
+<form
+  method="post"
+  hx-post="{% url 'hub:project-create' %}"
+  hx-target="#project-list"
+  hx-swap="afterbegin"
+  class="space-y-3"
+>
+  {% csrf_token %}
+  <div>
+    <label for="{{ project_form.name.id_for_label }}" class="block text-sm font-medium">Name</label>
+    {{ project_form.name }}
+    {% if project_form.name.errors %}
+      <div class="text-xs text-rose-600">{{ project_form.name.errors }}</div>
+    {% endif %}
+  </div>
+  <div>
+    <label for="{{ project_form.description.id_for_label }}" class="block text-sm font-medium">Description</label>
+    {{ project_form.description }}
+  </div>
+  <button class="w-full rounded-full bg-[var(--teal)] text-white py-2 font-medium">Create</button>
+</form>
