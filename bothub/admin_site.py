@@ -25,12 +25,12 @@ class BotHubAdminSite(UnfoldAdminSite):
 
     def dashboard_view(self, request):
         # Optimize stats collection with a single database query using Django's table introspection
-        # Table names come from Django's ORM metadata, not user input, so they're safe to use in f-strings
-        project_table = Project._meta.db_table
-        task_table = Task._meta.db_table
-        thread_table = Thread._meta.db_table
-        message_table = Message._meta.db_table
-        user_table = User._meta.db_table
+        # Use quote_name to properly escape table names for security best practices
+        project_table = connection.ops.quote_name(Project._meta.db_table)
+        task_table = connection.ops.quote_name(Task._meta.db_table)
+        thread_table = connection.ops.quote_name(Thread._meta.db_table)
+        message_table = connection.ops.quote_name(Message._meta.db_table)
+        user_table = connection.ops.quote_name(User._meta.db_table)
 
         with connection.cursor() as cursor:
             cursor.execute(
