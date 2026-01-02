@@ -17,13 +17,13 @@ class AdminDashboardTests(TestCase):
 
     def _build_data(self):
         project = Project.objects.create(name="Project One", created_by=self.admin_user)
-        task = Task.objects.create(project=project, title="Task One", created_by=self.admin_user)
+        Task.objects.create(project=project, title="Task One", created_by=self.admin_user)
         thread = Thread.objects.create(title="Thread One", project=project, created_by=self.admin_user)
         Message.objects.create(thread=thread, body="Hi", created_by=self.admin_user)
-        return project, task, thread
+        return project, thread
 
     def test_dashboard_renders_with_stats(self):
-        project, task, thread = self._build_data()
+        self._build_data()
 
         url = reverse("admin:index")
         resp = self.client.get(url)
