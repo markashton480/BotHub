@@ -275,6 +275,7 @@ if LOG_FILE:
             "level": "ERROR",
             "class": "logging.FileHandler",
             "filename": LOG_FILE,
+            "delay": True,
         }
     except OSError:
         # Fallback to console if file is not writable (e.g., CI)
