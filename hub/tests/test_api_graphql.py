@@ -30,9 +30,20 @@ class GraphQLTestClient(BaseGraphQLTestClient):
     def request(self, body, headers=None, files=None):
         # Create a mock request object with authenticated user
         from unittest.mock import Mock
+        import strawberry
+
         request = Mock()
         request.user = self.request_user
-        return super().request(body)
+
+        # Execute the GraphQL query with the schema
+        result = schema.execute_sync(
+            query=body.get("query"),
+            variable_values=body.get("variables"),
+            context_value=request,
+            operation_name=body.get("operationName"),
+        )
+
+        return result
 
 
 class GraphQLProjectQueryTests(TestCase):
