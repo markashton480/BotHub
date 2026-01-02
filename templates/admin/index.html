@@ -3,24 +3,35 @@
 {% block content %}
   <div class="dashboard-module">
     <h1>Overview</h1>
-    <div class="module">
-      <table>
-        <thead>
-          <tr>
-            <th>Metric</th>
-            <th>Count</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr><td>Projects</td><td>{{ stats.projects }}</td></tr>
-          <tr><td>Tasks</td><td>{{ stats.tasks }}</td></tr>
-          <tr><td>Threads</td><td>{{ stats.threads }}</td></tr>
-          <tr><td>Messages</td><td>{{ stats.messages }}</td></tr>
-          <tr><td>Tags</td><td>{{ stats.tags }}</td></tr>
-          <tr><td>Webhooks</td><td>{{ stats.webhooks }}</td></tr>
-          <tr><td>Audit Events</td><td>{{ stats.audit_events }}</td></tr>
-        </tbody>
-      </table>
+    <div class="dashboard-grid">
+      <div class="dashboard-card">
+        <div class="dashboard-label">Projects</div>
+        <div class="dashboard-value">{{ stats.projects }}</div>
+      </div>
+      <div class="dashboard-card">
+        <div class="dashboard-label">Tasks</div>
+        <div class="dashboard-value">{{ stats.tasks }}</div>
+      </div>
+      <div class="dashboard-card">
+        <div class="dashboard-label">Threads</div>
+        <div class="dashboard-value">{{ stats.threads }}</div>
+      </div>
+      <div class="dashboard-card">
+        <div class="dashboard-label">Messages</div>
+        <div class="dashboard-value">{{ stats.messages }}</div>
+      </div>
+      <div class="dashboard-card">
+        <div class="dashboard-label">Tags</div>
+        <div class="dashboard-value">{{ stats.tags }}</div>
+      </div>
+      <div class="dashboard-card">
+        <div class="dashboard-label">Webhooks</div>
+        <div class="dashboard-value">{{ stats.webhooks }}</div>
+      </div>
+      <div class="dashboard-card">
+        <div class="dashboard-label">Audit Events</div>
+        <div class="dashboard-value">{{ stats.audit_events }}</div>
+      </div>
     </div>
   </div>
 

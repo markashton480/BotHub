@@ -182,8 +182,15 @@ UNFOLD = {
     "SITE_TITLE": "BotHub",
     "SITE_HEADER": "BotHub Admin",
     "SITE_URL": "/admin/",
+    "STYLES": ["admin/bothub.css"],
+    "COMMAND": {
+        "search_models": True,
+        "show_history": False,
+        "search_callback": None,
+    },
     "SIDEBAR": {
-        "show_search": False,
+        "show_search": True,
+        "command_search": True,
         "navigation": [
             {
                 "title": "Core",
