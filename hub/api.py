@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
 from rest_framework import permissions, viewsets
+from rest_framework.throttling import UserRateThrottle
 
 from .audit import log_event
 from .models import AuditEvent, Message, Project, ProjectMembership, Tag, Task, TaskAssignment, Thread, UserProfile, Webhook
@@ -26,6 +27,20 @@ from .serializers import (
 User = get_user_model()
 
 
+class AgentRateThrottle(UserRateThrottle):
+    """Custom throttle that applies higher rate limits to agent users."""
+
+    def get_rate(self):
+        """Return appropriate rate based on user type."""
+        from django.conf import settings
+
+        if self.request and self.request.user and self.request.user.is_authenticated:
+            profile = getattr(self.request.user, 'profile', None)
+            if profile and profile.kind == 'agent':
+                return settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'].get('agent', '5000/hour')
+        return settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'].get('user', '1000/hour')
+
+
 def get_actor(request):
     user = getattr(request, "user", None)
     if user and user.is_authenticated:
@@ -44,17 +59,20 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = User.objects.all().select_related("profile")
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AgentRateThrottle]
 
 
 class UserProfileViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = UserProfile.objects.select_related("user")
     serializer_class = UserProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AgentRateThrottle]
 
 
 class ProjectViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectSerializer
     permission_classes = [permissions.IsAuthenticated, CanViewProject]
+    throttle_classes = [AgentRateThrottle]
 
     def get_queryset(self):
         queryset = Project.objects.all().select_related("created_by")
@@ -85,6 +103,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
 class ProjectMembershipViewSet(viewsets.ModelViewSet):
     serializer_class = ProjectMembershipSerializer
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AgentRateThrottle]
 
     def get_queryset(self):
         """Only show memberships for projects the user has access to."""
@@ -108,11 +127,13 @@ class TagViewSet(viewsets.ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AgentRateThrottle]
 
 
 class TaskViewSet(viewsets.ModelViewSet):
     serializer_class = TaskSerializer
     permission_classes = [permissions.IsAuthenticated, CanViewProject]
+    throttle_classes = [AgentRateThrottle]
 
     def get_queryset(self):
         queryset = Task.objects.all().select_related("project", "parent", "created_by").prefetch_related("tags")
@@ -143,6 +164,7 @@ class TaskViewSet(viewsets.ModelViewSet):
 class TaskAssignmentViewSet(viewsets.ModelViewSet):
     serializer_class = TaskAssignmentSerializer
     permission_classes = [permissions.IsAuthenticated, CanViewProject]
+    throttle_classes = [AgentRateThrottle]
 
     def get_queryset(self):
         queryset = TaskAssignment.objects.all().select_related("task", "assignee", "added_by")
@@ -165,6 +187,7 @@ class TaskAssignmentViewSet(viewsets.ModelViewSet):
 class ThreadViewSet(viewsets.ModelViewSet):
     serializer_class = ThreadSerializer
     permission_classes = [permissions.IsAuthenticated, CanViewProject]
+    throttle_classes = [AgentRateThrottle]
 
     def get_queryset(self):
         queryset = Thread.objects.all().select_related("project", "task", "created_by")
@@ -195,6 +218,7 @@ class ThreadViewSet(viewsets.ModelViewSet):
 class MessageViewSet(viewsets.ModelViewSet):
     serializer_class = MessageSerializer
     permission_classes = [permissions.IsAuthenticated, CanViewProject]
+    throttle_classes = [AgentRateThrottle]
 
     def _get_author_metadata(self, user, validated_data):
         author_role = validated_data.get("author_role")
@@ -240,6 +264,7 @@ class MessageViewSet(viewsets.ModelViewSet):
 class AuditEventViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = AuditEventSerializer
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AgentRateThrottle]
 
     def get_queryset(self):
         """Filter audit events to only show those related to projects the user has access to."""
@@ -277,3 +302,4 @@ class WebhookViewSet(viewsets.ModelViewSet):
     queryset = Webhook.objects.all()
     serializer_class = WebhookSerializer
     permission_classes = [permissions.IsAuthenticated]
+    throttle_classes = [AgentRateThrottle]
