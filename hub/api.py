@@ -30,15 +30,21 @@ User = get_user_model()
 class AgentRateThrottle(UserRateThrottle):
     """Custom throttle that applies higher rate limits to agent users."""
 
-    def get_rate(self):
-        """Return appropriate rate based on user type."""
+    rate = '1000/hour'  # Default rate, adjusted per-request for agents
+
+    def allow_request(self, request, view):
+        """Apply appropriate rate limit based on user type."""
         from django.conf import settings
 
-        if self.request and self.request.user and self.request.user.is_authenticated:
-            profile = getattr(self.request.user, 'profile', None)
+        if request.user and request.user.is_authenticated:
+            profile = getattr(request.user, 'profile', None)
             if profile and profile.kind == 'agent':
-                return settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'].get('agent', '5000/hour')
-        return settings.REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'].get('user', '1000/hour')
+                self.rate = settings.REST_FRAMEWORK.get('DEFAULT_THROTTLE_RATES', {}).get('agent', '5000/hour')
+            else:
+                self.rate = settings.REST_FRAMEWORK.get('DEFAULT_THROTTLE_RATES', {}).get('user', '1000/hour')
+            self.num_requests, self.duration = self.parse_rate(self.rate)
+
+        return super().allow_request(request, view)
 
 
 def get_actor(request):
