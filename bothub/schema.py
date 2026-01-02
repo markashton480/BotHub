@@ -9,7 +9,13 @@ from django.contrib.auth import get_user_model
 from strawberry.exceptions import GraphQLError
 
 from hub.audit import log_event
-from hub.models import Message, Project, Tag, Task, Thread, UserProfile
+from hub.models import Message, Project, ProjectMembership, Tag, Task, Thread, UserProfile
+from hub.permissions import (
+    filter_by_project_membership,
+    filter_projects_by_membership,
+    user_can_access_project,
+    user_can_edit_project,
+)
 
 User = get_user_model()
 
@@ -130,30 +136,56 @@ class MessageInput:
 @strawberry.type
 class Query:
     @strawberry.field
-    def projects(self) -> List[ProjectType]:
-        return Project.objects.all()
+    def projects(self, info) -> List[ProjectType]:
+        actor = require_actor(info)
+        queryset = Project.objects.all()
+        return list(filter_projects_by_membership(queryset, actor))
 
     @strawberry.field
-    def project(self, id: strawberry.ID) -> Optional[ProjectType]:
-        return Project.objects.filter(pk=id).first()
+    def project(self, info, id: strawberry.ID) -> Optional[ProjectType]:
+        actor = require_actor(info)
+        project = Project.objects.filter(pk=id).first()
+        if not project:
+            return None
+        # Check if user has access to this project
+        if not user_can_access_project(actor, project):
+            raise GraphQLError("Permission denied: You don't have access to this project.")
+        return project
 
     @strawberry.field
-    def tasks(self, project_id: Optional[strawberry.ID] = None) -> List[TaskType]:
+    def tasks(self, info, project_id: Optional[strawberry.ID] = None) -> List[TaskType]:
+        actor = require_actor(info)
         queryset = Task.objects.all()
+        # Filter by project membership
+        queryset = filter_by_project_membership(queryset, actor, project_field='project')
         if project_id:
             queryset = queryset.filter(project_id=project_id)
         return list(queryset)
 
     @strawberry.field
-    def threads(self, project_id: Optional[strawberry.ID] = None) -> List[ThreadType]:
+    def threads(self, info, project_id: Optional[strawberry.ID] = None) -> List[ThreadType]:
+        actor = require_actor(info)
         queryset = Thread.objects.all()
+        # Filter threads by project membership (thread can be attached to project or task)
+        if not actor.is_superuser:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(project__memberships__user=actor) | Q(task__project__memberships__user=actor)
+            ).distinct()
         if project_id:
             queryset = queryset.filter(project_id=project_id)
         return list(queryset)
 
     @strawberry.field
-    def messages(self, thread_id: Optional[strawberry.ID] = None) -> List[MessageType]:
+    def messages(self, info, thread_id: Optional[strawberry.ID] = None) -> List[MessageType]:
+        actor = require_actor(info)
         queryset = Message.objects.all().order_by("created_at")
+        # Filter messages by thread's project membership
+        if not actor.is_superuser:
+            from django.db.models import Q
+            queryset = queryset.filter(
+                Q(thread__project__memberships__user=actor) | Q(thread__task__project__memberships__user=actor)
+            ).distinct()
         if thread_id:
             queryset = queryset.filter(thread_id=thread_id)
         return list(queryset)
@@ -169,6 +201,13 @@ class Mutation:
             description=input.description or "",
             created_by=actor,
         )
+        # Auto-create OWNER membership for project creator
+        ProjectMembership.objects.create(
+            project=project,
+            user=actor,
+            role=ProjectMembership.Role.OWNER,
+            invited_by=actor
+        )
         log_event(actor, "project.created", project)
         return project
 
@@ -178,6 +217,9 @@ class Mutation:
         project = Project.objects.filter(pk=input.project_id).first()
         if not project:
             raise GraphQLError("Project not found.")
+        # Check if user has permission to edit this project
+        if not user_can_edit_project(actor, project):
+            raise GraphQLError("Permission denied: You don't have permission to create tasks in this project.")
         parent = None
         if input.parent_id:
             parent = Task.objects.filter(pk=input.parent_id).first()
@@ -206,6 +248,10 @@ class Mutation:
             raise GraphQLError("Thread must attach to a project or task.")
         if project and task:
             raise GraphQLError("Thread can only attach to one scope.")
+        # Check permissions on the target project
+        target_project = project if project else (task.project if task else None)
+        if target_project and not user_can_edit_project(actor, target_project):
+            raise GraphQLError("Permission denied: You don't have permission to create threads in this project.")
         thread = Thread.objects.create(
             title=input.title,
             kind=input.kind,
@@ -222,6 +268,10 @@ class Mutation:
         thread = Thread.objects.filter(pk=input.thread_id).first()
         if not thread:
             raise GraphQLError("Thread not found.")
+        # Check permissions on the thread's project
+        target_project = thread.project if thread.project else (thread.task.project if thread.task else None)
+        if target_project and not user_can_edit_project(actor, target_project):
+            raise GraphQLError("Permission denied: You don't have permission to create messages in this thread.")
         message = Message.objects.create(
             thread=thread,
             body=input.body,

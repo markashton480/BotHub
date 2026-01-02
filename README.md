@@ -51,3 +51,13 @@ mutation {
   }
 }
 ```
+
+## CI/CD
+GitHub Actions runs `make lint` and `make test` on pushes and PRs to `develop` and `main`.
+Deploys run on pushes to `main` via SSH and assume the app lives at `/srv/bothub` and
+the `bothub` systemd service can be restarted without a sudo password prompt.
+
+Required repository secrets:
+- `BOT_HUB_DEPLOY_SSH_KEY`: private key for the deploy user.
+- `BOT_HUB_DEPLOY_HOST`: server hostname or IP.
+- `BOT_HUB_DEPLOY_USER`: SSH username (e.g. `bothub`).

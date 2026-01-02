@@ -41,6 +41,29 @@ class Project(models.Model):
         return self.name
 
 
+class ProjectMembership(models.Model):
+    class Role(models.TextChoices):
+        OWNER = "owner", "Owner"
+        ADMIN = "admin", "Admin"
+        MEMBER = "member", "Member"
+        VIEWER = "viewer", "Viewer"
+
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="memberships")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="project_memberships")
+    role = models.CharField(max_length=20, choices=Role.choices, default=Role.MEMBER)
+    invited_by = models.ForeignKey(
+        User, null=True, blank=True, on_delete=models.SET_NULL, related_name="memberships_created"
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("project", "user")
+        ordering = ["project_id", "role", "id"]
+
+    def __str__(self) -> str:
+        return f"{self.user} -> {self.project} ({self.role})"
+
+
 class Tag(models.Model):
     name = models.CharField(max_length=60, unique=True)
     slug = models.SlugField(max_length=70, unique=True)
