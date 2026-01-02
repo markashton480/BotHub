@@ -33,6 +33,7 @@ router.register("assignments", hub_api.TaskAssignmentViewSet, basename="assignme
 router.register("threads", hub_api.ThreadViewSet, basename="thread")
 router.register("messages", hub_api.MessageViewSet, basename="message")
 router.register("audit-events", hub_api.AuditEventViewSet, basename="audit-event")
+router.register("webhooks", hub_api.WebhookViewSet, basename="webhook")
 
 urlpatterns = [
     path('admin/', admin.site.urls),

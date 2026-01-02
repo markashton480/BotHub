@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import AuditEvent, Message, Project, Tag, Task, TaskAssignment, Thread, UserProfile
+from .models import AuditEvent, Message, Project, Tag, Task, TaskAssignment, Thread, UserProfile, Webhook
 
 
 @admin.register(UserProfile)
@@ -59,3 +59,10 @@ class TaskAssignmentAdmin(admin.ModelAdmin):
 class AuditEventAdmin(admin.ModelAdmin):
     list_display = ("verb", "actor", "created_at")
     search_fields = ("verb", "metadata")
+
+
+@admin.register(Webhook)
+class WebhookAdmin(admin.ModelAdmin):
+    list_display = ("name", "url", "is_active", "created_at")
+    list_filter = ("is_active",)
+    search_fields = ("name", "url", "events")

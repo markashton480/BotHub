@@ -10,6 +10,7 @@ from .models import (
     TaskAssignment,
     Thread,
     UserProfile,
+    Webhook,
 )
 
 User = get_user_model()
@@ -124,6 +125,13 @@ class ThreadSerializer(serializers.ModelSerializer):
                 }
             )
         return attrs
+
+
+class WebhookSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Webhook
+        fields = ["id", "name", "url", "secret", "events", "is_active", "created_at"]
+        read_only_fields = ["created_at"]
 
 
 class MessageSerializer(serializers.ModelSerializer):
