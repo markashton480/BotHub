@@ -9,7 +9,7 @@ from rest_framework.authtoken.admin import TokenAdmin
 from rest_framework.authtoken.models import TokenProxy
 
 from bothub.admin_site import bot_admin_site
-from .models import AuditEvent, Message, Project, Tag, Task, TaskAssignment, Thread, UserProfile, Webhook
+from .models import AuditEvent, Message, Project, ProjectMembership, Tag, Task, TaskAssignment, Thread, UserProfile, Webhook
 
 User = get_user_model()
 
@@ -83,6 +83,13 @@ class ProjectAdmin(CreatedByAdminMixin, admin.ModelAdmin):
     formfield_overrides = {
         models.TextField: {"widget": forms.Textarea(attrs={"rows": 4})},
     }
+
+
+@admin.register(ProjectMembership, site=bot_admin_site)
+class ProjectMembershipAdmin(admin.ModelAdmin):
+    list_display = ("project", "user", "role", "invited_by", "created_at")
+    list_filter = ("role",)
+    search_fields = ("project__name", "user__username")
 
 
 class TaskAssignmentInline(admin.TabularInline):
