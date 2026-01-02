@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{% block title %}BotHub{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/htmx.org@1.9.12"></script>
+  <style>
+    :root {
+      --ink: #1b1c1f;
+      --sand: #f5f1e8;
+      --mist: #ece5d8;
+      --teal: #0d9488;
+      --amber: #d97706;
+      --sky: #0ea5e9;
+    }
+    body {
+      font-family: "IBM Plex Sans", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top right, rgba(14, 165, 233, 0.12), transparent 45%),
+        radial-gradient(circle at 20% 20%, rgba(217, 119, 6, 0.18), transparent 40%),
+        linear-gradient(135deg, var(--sand), var(--mist));
+      min-height: 100vh;
+    }
+    h1, h2, h3, h4 {
+      font-family: "Space Grotesk", sans-serif;
+      letter-spacing: -0.02em;
+    }
+    .card {
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid rgba(27, 28, 31, 0.08);
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(27, 28, 31, 0.08);
+      backdrop-filter: blur(8px);
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 0.6rem 0.9rem;
+      border-radius: 14px;
+      border: 1px solid rgba(27, 28, 31, 0.12);
+      background: rgba(255, 255, 255, 0.9);
+      font-size: 0.95rem;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: 2px solid rgba(14, 165, 233, 0.35);
+      border-color: rgba(14, 165, 233, 0.6);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      background: rgba(13, 148, 136, 0.12);
+      color: var(--teal);
+    }
+  </style>
+</head>
+<body class="antialiased">
+  <header class="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+    <a href="{% url 'hub:home' %}" class="text-xl font-semibold">BotHub</a>
+    <div class="text-sm text-slate-600">Human + Agent Collaboration Space</div>
+  </header>
+  <main class="max-w-6xl mx-auto px-6 pb-16">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

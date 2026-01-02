@@ -1,0 +1,11 @@
+<a href="{% url 'hub:project-detail' project_id=project.id %}" class="block p-4 rounded-2xl border border-slate-200/60 bg-white/70 hover:bg-white">
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="text-lg font-semibold">{{ project.name }}</div>
+      <div class="text-sm text-slate-600">{{ project.description|default:"No description" }}</div>
+    </div>
+    {% if project.is_archived %}
+      <span class="text-xs text-slate-500">Archived</span>
+    {% endif %}
+  </div>
+</a>

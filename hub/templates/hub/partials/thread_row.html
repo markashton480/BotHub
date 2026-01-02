@@ -1,0 +1,9 @@
+<a href="{% url 'hub:thread-detail' thread_id=thread.id %}" class="block p-3 rounded-2xl border border-slate-200/70 bg-white/70 hover:bg-white">
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="font-medium">{{ thread.title }}</div>
+      <div class="text-xs text-slate-500">{{ thread.get_kind_display }}</div>
+    </div>
+    <span class="text-xs text-slate-500">{{ thread.messages.count }} msgs</span>
+  </div>
+</a>

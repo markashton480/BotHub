@@ -1,0 +1,35 @@
+<form
+  method="post"
+  hx-post="{% url 'hub:task-create' project_id=project.id %}"
+  hx-target="#task-tree"
+  hx-swap="innerHTML"
+  class="space-y-3"
+>
+  {% csrf_token %}
+  <div>
+    <label class="block text-sm font-medium">Title</label>
+    {{ task_form.title }}
+    {% if task_form.title.errors %}
+      <div class="text-xs text-rose-600">{{ task_form.title.errors }}</div>
+    {% endif %}
+  </div>
+  <div>
+    <label class="block text-sm font-medium">Description</label>
+    {{ task_form.description }}
+  </div>
+  <div class="grid grid-cols-2 gap-3">
+    <div>
+      <label class="block text-sm font-medium">Status</label>
+      {{ task_form.status }}
+    </div>
+    <div>
+      <label class="block text-sm font-medium">Priority</label>
+      {{ task_form.priority }}
+    </div>
+  </div>
+  <div>
+    <label class="block text-sm font-medium">Parent task (optional)</label>
+    {{ task_form.parent }}
+  </div>
+  <button class="w-full rounded-full bg-[var(--sky)] text-white py-2 font-medium">Add Task</button>
+</form>

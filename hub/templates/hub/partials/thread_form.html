@@ -1,0 +1,21 @@
+<form
+  method="post"
+  hx-post="{% url 'hub:thread-create' project_id=project.id %}"
+  hx-target="#thread-list"
+  hx-swap="afterbegin"
+  class="space-y-3"
+>
+  {% csrf_token %}
+  <div>
+    <label class="block text-sm font-medium">Title</label>
+    {{ thread_form.title }}
+    {% if thread_form.title.errors %}
+      <div class="text-xs text-rose-600">{{ thread_form.title.errors }}</div>
+    {% endif %}
+  </div>
+  <div>
+    <label class="block text-sm font-medium">Type</label>
+    {{ thread_form.kind }}
+  </div>
+  <button class="w-full rounded-full bg-[var(--amber)] text-white py-2 font-medium">Start Thread</button>
+</form>

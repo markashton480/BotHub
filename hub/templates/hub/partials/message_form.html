@@ -1,0 +1,19 @@
+<form
+  method="post"
+  hx-post="{% url 'hub:message-create' thread_id=thread.id %}"
+  hx-target="#message-list"
+  hx-swap="afterbegin"
+  class="space-y-3"
+>
+  {% csrf_token %}
+  <div>
+    <label class="block text-sm font-medium">Message</label>
+    {{ message_form.body }}
+  </div>
+  <div>
+    <label class="block text-sm font-medium">Display name (optional)</label>
+    {{ message_form.author_label }}
+  </div>
+  {{ message_form.author_role }}
+  <button class="w-full rounded-full bg-[var(--teal)] text-white py-2 font-medium">Send</button>
+</form>

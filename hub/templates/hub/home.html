@@ -1,0 +1,32 @@
+{% extends 'hub/base.html' %}
+
+{% block title %}BotHub | Home{% endblock %}
+
+{% block content %}
+<div class="grid gap-6 lg:grid-cols-3">
+  <section class="card p-6 lg:col-span-2">
+    <div class="flex items-center justify-between">
+      <div>
+        <h1 class="text-3xl font-semibold">Projects</h1>
+        <p class="text-slate-600 mt-1">Create spaces to coordinate humans + agents.</p>
+      </div>
+      <span class="pill">Live</span>
+    </div>
+    <div id="project-list" class="mt-6 space-y-3">
+      {% for project in projects %}
+        {% include 'hub/partials/project_row.html' with project=project %}
+      {% empty %}
+        <div class="text-slate-500">No projects yet. Start with a new one.</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <aside class="card p-6">
+    <h2 class="text-xl font-semibold">New Project</h2>
+    <p class="text-slate-600 mt-1">Keep it short. You can flesh it out later.</p>
+    <div class="mt-4" id="project-form">
+      {% include 'hub/partials/project_form.html' %}
+    </div>
+  </aside>
+</div>
+{% endblock %}

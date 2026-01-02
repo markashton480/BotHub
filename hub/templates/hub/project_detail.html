@@ -1,0 +1,43 @@
+{% extends 'hub/base.html' %}
+
+{% block title %}BotHub | {{ project.name }}{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-between">
+  <div>
+    <h1 class="text-3xl font-semibold">{{ project.name }}</h1>
+    <p class="text-slate-600 mt-1">{{ project.description|default:"No description yet." }}</p>
+  </div>
+  <a href="{% url 'hub:home' %}" class="text-sm text-slate-600 hover:text-slate-900">Back to projects</a>
+</div>
+
+<div class="grid gap-6 lg:grid-cols-3 mt-6">
+  <section class="card p-6 lg:col-span-2">
+    <div class="flex items-center justify-between">
+      <h2 class="text-xl font-semibold">Tasks</h2>
+      <span class="text-xs uppercase tracking-wide text-slate-500">Nested</span>
+    </div>
+    <div id="task-tree" class="mt-4 space-y-3">
+      {% include 'hub/partials/task_tree.html' with task_tree=task_tree %}
+    </div>
+    <div class="mt-6" id="task-form">
+      {% include 'hub/partials/task_form.html' with project=project task_form=task_form %}
+    </div>
+  </section>
+
+  <aside class="card p-6">
+    <h2 class="text-xl font-semibold">Threads</h2>
+    <p class="text-slate-600 mt-1">Keep decisions and planning in one place.</p>
+    <div id="thread-list" class="mt-4 space-y-3">
+      {% for thread in threads %}
+        {% include 'hub/partials/thread_row.html' with thread=thread %}
+      {% empty %}
+        <div class="text-slate-500">No threads yet.</div>
+      {% endfor %}
+    </div>
+    <div class="mt-6" id="thread-form">
+      {% include 'hub/partials/thread_form.html' with project=project thread_form=thread_form %}
+    </div>
+  </aside>
+</div>
+{% endblock %}
