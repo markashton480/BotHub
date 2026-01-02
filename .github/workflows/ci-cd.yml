@@ -1,4 +1,4 @@
-name: CI/CD
+name: CI
 
 on:
   push:
@@ -35,33 +35,3 @@ jobs:
 
       - name: Test
         run: make test
-
-  deploy:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - name: Start SSH agent
-        uses: webfactory/ssh-agent@v0.9.0
-        with:
-          ssh-private-key: ${{ secrets.BOT_HUB_DEPLOY_SSH_KEY }}
-
-      - name: Add server to known hosts
-        run: |
-          mkdir -p ~/.ssh
-          ssh-keyscan -H "${{ secrets.BOT_HUB_DEPLOY_HOST }}" >> ~/.ssh/known_hosts
-
-      - name: Deploy
-        run: |
-          ssh "${{ secrets.BOT_HUB_DEPLOY_USER }}"@"${{ secrets.BOT_HUB_DEPLOY_HOST }}" <<'EOF'
-          set -euo pipefail
-          cd /srv/bothub
-          git fetch origin
-          git checkout main
-          git pull --ff-only origin main
-          . .venv/bin/activate
-          pip install -r requirements.txt
-          python manage.py migrate
-          python manage.py collectstatic --noinput
-          sudo -n systemctl restart bothub
-          EOF
